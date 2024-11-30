@@ -1,85 +1,30 @@
-library(tidyverse)
-library(gtools) 
+library(tidyverse) 
+library(gtools)  
 library(Rmisc) 
 library(data.table)
 library(stats)
 library(lubridate) 
 library(RColorBrewer)
-library(magrittr)
+library(magrittr) 
 library(lme4)
 library(emmeans)
 library(broom)
 require(MASS)
 require(caTools)
-library(zoo)
-
+library(zoo) 
 library(plotly)
- 
-#10042022_nonHomecage and tempsweep (TS)
-setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/fp_Data/10042022_nonHomecage")
-setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/fp_Data/10042022_tempsweep")
-#10_12_2022
-setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/fp_Data/10122022_homecageprac")
-#10142022_temp_redo/5C
-setwd('/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/fp_Data/10142022_temp_redo/5C')
-setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/fp_Data/10142022_temp_redo/40C")
-#10_28_2022 5, TS
-setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/fp_Data/10282022_11222022_JR/10_28_22/10_28_22_TempSweep")
-setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/fp_Data/10282022_11222022_JR/10_28_22/10_28_22_5C")
-#11_01_2022 5, 40, TS
-setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/10282022_11222022_JR/11_1_22/11_1_22_TS")
-setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/fp_Data/10282022_11222022_JR/11_1_22/11_1_22_5C")
-setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/fp_Data/10282022_11222022_JR/11_1_22/11_1_22_40C")
-#11_03_2022 HC
-setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/fp_Data/10282022_11222022_JR/11_3_22_HC")
-setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/fp_Data/10282022_11222022_JR/11_3_22_HC_CHOPPED")
-#11_8_22
-setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/fp_Data/10282022_11222022_JR/11_8_22/11_8_22_5C")
-setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/fp_Data/10282022_11222022_JR/11_8_22/11_8_22_40C")
-setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/fp_Data/10282022_11222022_JR/11_8_22/11_8_22_TS")
-#11_10_22
-setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/fp_Data/10282022_11222022_JR/11_10_22_HC")
-#11_17_22
-setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/fp_Data/10282022_11222022_JR/11_17_22_HC") 
-#11_22_22
-setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/fp_Data/10282022_11222022_JR/11_22_22/TS")
-setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/fp_Data/10282022_11222022_JR/11_22_22/5C")
-#Oxycre_Jan_Feb_JR
- #1_31_23_HP 
- setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/Bonsai_RawData/Oxycre_Jan_Feb_JR/1_31_23_HP/5C") # -
- setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/Bonsai_RawData/Oxycre_Jan_Feb_JR/1_31_23_HP/40C") # -
- setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/Bonsai_RawData/Oxycre_Jan_Feb_JR/1_31_23_HP/TS") # -
- #02_02_23_HC
- setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/Bonsai_RawData/Oxycre_Jan_Feb_JR/02_02_23_HC") #  
- #02_07_23_HP
- setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/Bonsai_RawData/Oxycre_Jan_Feb_JR/02_07_23_HP/5C") #-
- setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/Bonsai_RawData/Oxycre_Jan_Feb_JR/02_07_23_HP/40C") #-
- setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/Bonsai_RawData/Oxycre_Jan_Feb_JR/02_07_23_HP/TS") #-
- #02_09_23_HC
- setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/Bonsai_RawData/Oxycre_Jan_Feb_JR/02_09_23_HC")
- #02_14_23_HP
- setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/fp_Data/Oxycre_Jan_Feb_JR/02_14_23_HP/5C")
- setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/Bonsai_RawData/Oxycre_Jan_Feb_JR/02_14_23_HP/40C")
- setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/Bonsai_RawData/Oxycre_Jan_Feb_JR/02_14_23_HP/TS")
- #02_16_23_HC
- setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/Bonsai_RawData/Oxycre_Jan_Feb_JR/02_16_23_HC")
- #02_21_23_HC
- setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/Bonsai_RawData/Oxycre_Jan_Feb_JR/02_21_23_HC")
- #02_23_23_Cold_HC
- setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/Bonsai_RawData/Oxycre_Jan_Feb_JR/02_23_23_Cold_HC")
- #03_02_23_HC_Solo
- setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/Bonsai_RawData/03_02_23_HC_Solo")
- #5_17_23_HC_Cold
- setwd("//alcova.arcc.uwyo.edu/project/huddlingVideosMicroscopy/neurophotometrics/Bonsai_RawData/Oxycre1208_May_June/5_17_23_HC_Cold")
- 
+library(ggprism)
+require(baseline)
+library(signal) 
 
-#TEST_02_13_23
-setwd("/Volumes/project/huddlingVideosMicroscopy/neurophotometrics/Bonsai_RawData/TEST_02_13_23")
+#set wd 
+#Mouse 3909
+setwd("//data.arcc.uwyo.edu/cluster/alcova/huddlingvidmicro/neurophotometrics/Bonsai_RawData/oxycre_3909_oct2024/10-18-24_paired_29")
 
 #PLOT DIRECTORY 
-plotdir = paste(getwd(),"/plots/", sep = "")
-
-##########################################S##############################
+plotdir = paste(getwd(),"/plots_smoothing9/", sep = "")
+plotdir
+########################################################################
 ########################################################################
 # PART 1: DATA MASSAGING
 # 
@@ -92,7 +37,7 @@ alldata <- list.files(pattern = "alldata")
 #Aligned time stamp from system time 
 computerClock <- list.files(pattern = "data_computerClock")
 # keydown
-keydown <- list.files(pattern = "keydown")
+#keydown <- list.files(pattern = "keydown")
 # in the event of multiple files, keep everything ordered
 alldata <- mixedsort(alldata)
 computerClock <- mixedsort(computerClock)
@@ -175,6 +120,7 @@ all_dat3 = all_dat2 %>%
 ######################
 # Save mean F value when LEDs are off. Can be used as an underestimation of baseline for dF/F calcs later on
 FP.no_led = all_dat3[1,"Region0G"] 
+
 # (1) get rid of first row in all_dat3 (since it's the LED-off baseline)
 # (2) make sure that there are an equal number of frames for each channel!!! Imbalance can cause trouble downstream
 # Note! The number of frames for channels 1 and 2 will either be equal, OR, they will differ by 1. 
@@ -201,50 +147,148 @@ all_dat3 = all_dat3 %>%
   dplyr::filter(LedState != 0)
 
 ######################
+#butterworth filter
+######################
+# a very simple function that pads the series with a reversed values before/after and then 
+# subsets the result to the original range of interest can solve this problem.
+# https://stackoverflow.com/questions/53950001/why-is-this-butterworth-filter-presenting-different-results-in-r-and-matlab 
+EndEffect <- function(filt,x) {
+  signal::filtfilt(filt,c(rev(x),x,rev(x)))[(length(x) + 1):(2 * length(x))]
+}
+
+#define filter and parameters
+# see https://www.mathworks.com/help/signal/ref/buttord.html#d126e10450
+order <- 4  # Filter order
+Hz <- 30 
+cutoff <- 2/(Hz/2) # Cutoff frequency
+b <- butter(order, cutoff, type="low")  # Design the filter coefficients
+
+#examine on subset 
+head = all_dat3[all_dat3$LedState == 2, ] %>% slice(30000:70000) #10000:12000
+ggplot(head, aes(x=FrameCounter, y = Region0G)) + 
+  geom_line() 
+#spectrum(head$Region0G)
+#apply the filter 
+head = head %>%
+  dplyr::group_by(LedState) %>% 
+  dplyr::mutate(Region0G = EndEffect(b,Region0G))  %>%
+  dplyr::ungroup()
+ggplot(head, aes(x=FrameCounter, y = Region0G)) + 
+  geom_line() 
+#spectrum(head$Region0G)
+
+#examine on full dataset of channel 2 or 1
+# data = all_dat3[all_dat3$LedState == 2,]
+# #spectrum(data$Region0G)
+# ggplot(data, aes(x=FrameCounter, y = Region0G)) +
+#   geom_line()
+# data$filtered_data <- EndEffect(b,data$Region0G)  # Apply the filter
+# ggplot(data, aes(x=FrameCounter, y = filtered_data)) +
+#   geom_line()
+#spectrum(data$filtered_data)
+
+all_dat3 = all_dat3 %>%
+  dplyr::group_by(LedState) %>% 
+  dplyr::mutate(Region0G = EndEffect(b,Region0G))  %>%
+  dplyr::ungroup()
+
+######################
 # Eliminate approximately first 1 to 5000 rows of data for each channel. There is typically only noise and artifacts here.
 # Or, since converting to NA causes all kinds of problems with the nls model, replace with a mean value
 # update: solution found to retaining NAs in nls model: specify "newdata" in augment. E.g. fitted = augment(fit, newdata = sensor1.2)
 ######################
-trim = 2000
-# at 20 Hz, 5000 rows = 250 seconds, or 4.2 minutes 
+trim = 66000
+#trim2 to trim back to front. Have to subtract the desired rows from the full length (n rows) of a channel
+expLength = nrow(all_dat3[all_dat3$LedState == 1, ])
+trim2 = expLength - 5400     #5400    #186000
+#20 Hz
 # at 20 Hz, 4000 rows = 200 seconds, or 3.33 min
+# at 20 Hz, 5000 rows = 250 seconds, or 4.2 minutes 
+#30 Hz
+# at 30 Hz per channel, 3000 rows = 100 seconds (3000/30 = 100)
+# at 30 Hz, 2000 rows = 66 seconds 
+# at 30 Hz, 5000 rows = 166 seconds, or 2.7 minutes
+# at 30 Hz, 5400 rows = 180 seconds, or 3 minutes
+# at 30 Hz, 18,000 rows = 600 seconds, or 10 minutes
+# at 30 Hz, 20,000 rows = 666 seconds, or 11 minutes
+
 all_dat3[all_dat3$LedState == 1, ] <- all_dat3[all_dat3$LedState == 1, ] %>% 
   dplyr::mutate(Region0G = ifelse(row_number() <= trim, NA, Region0G))  #mean(head(all_dat3$Region0G, 2000L)) or #NA
 all_dat3[all_dat3$LedState == 2, ] <- all_dat3[all_dat3$LedState == 2, ] %>% 
   dplyr::mutate(Region0G = ifelse(row_number() <= trim, NA , Region0G)) #mean(head(all_dat3$Region0G, 2000L)) of # NA
 
-#all_dat3FOO <- all_dat3 %>% dplyr::mutate(Region0G = ifelse(row_number(c(1:100)), mean(all_dat3$Region0G), Region0G))
-#all_dat3 %>% dplyr::mutate(Region0G = na_if(Region0G, row_number() <= 10000))
-#all_dat3[all_dat3$Region0G [1:5],]
+# #use trim2 to trim back to front
+all_dat3[all_dat3$LedState == 1, ] <- all_dat3[all_dat3$LedState == 1, ] %>%
+  dplyr::mutate(Region0G = ifelse(row_number() >= trim2, NA, Region0G))  #mean(head(all_dat3$Region0G, 2000L)) or #NA
+all_dat3[all_dat3$LedState == 2, ] <- all_dat3[all_dat3$LedState == 2, ] %>%
+  dplyr::mutate(Region0G = ifelse(row_number() >= trim2, NA , Region0G)) #mean(head(all_dat3$Region0G, 2000L)) of # NA
+
+######################
+# Add relative time in seconds 
+######################
+str(all_dat3)
+all_dat3$FrameCounter
+
+all_dat3 = all_dat3 %>%
+  dplyr::mutate(diff_row = Timestamp - lag(Timestamp)) %>%
+  dplyr::mutate(timeS = cumsum(ifelse(is.na(diff_row), 0, diff_row)) + diff_row*0) %>%
+  dplyr::select(-diff_row)
 
 ######################
 # Smoothing
 ######################
 # Sabatini paper (Suk Joon Lee et al) does a 200ms window across 1000frames per second (fps), for a factor of 0.2*fps
 #take a fraction of the data to aid in visualization 
-head = all_dat3[all_dat3$LedState == 1, ] %>% slice(20000:22000) #10000:12000
+head = all_dat3[all_dat3$LedState == 2, ] %>% slice(30000:50000) #10000:12000
 ggplot(head, aes(x=FrameCounter, y = Region0G)) + 
   geom_line() 
 
+######
+# spectral density analysis
+######
+# spectrum(head$Region0G)
+# perio <- spec.pgram(fast = TRUE, head$Region0G, spans = c(3, 5, 3), taper = 0.2,
+#                     plot = TRUE)
+# acf(head$FrameCounter, lag.max = 200)
+# mspect <- spectrum(head$Region0G, log="yes", spans=c(2,2), plot=TRUE)
+# delta <- 10/60
+# specx <- mspect$freq/delta
+# specy <- 2*mspect$spec
+# plot(specx, specy, xlab="Period", ylab="Spectral Density", type="l")
+# max(specy)
+# #butterworth filter
+# bf <- butter(1, 2.376219e-06, type="high")
+# b <- filter(bf, head$Region0G)
+# plot(head$FrameCounter, b, col="black", pch=20)
+
+######
+# rolling averages
+######
 #make some rolling averages. 20fps * 0.2 = 4
 testRoll = head %>%
-  mutate(roll10 = rollapply(Region0G, width = 10, FUN = mean,fill = "extend"), 
+  mutate(roll20 = rollapply(Region0G, width = 20, FUN = mean,fill = "extend"), 
+         roll10 = rollapply(Region0G, width = 10, FUN = mean,fill = "extend"), 
+         roll9 = rollapply(Region0G, width = 9, FUN = mean,fill = "extend"), 
          roll5 = rollapply(Region0G, width = 5, FUN = mean,fill = "extend"),
          roll4 = rollapply(Region0G, width = 4, FUN = mean,fill = "extend"), 
          roll3 = rollapply(Region0G, width = 3, FUN = mean,fill = "extend"))
 # and plot one or some of them to pick the best "width" 
 testRoll %>% 
-  pivot_longer(cols=c(Region0G, roll3),
+  pivot_longer(cols=c(Region0G, roll9),
     names_to="dataType",
     values_to = "value"
   ) %>% 
-  ggplot(aes(x=FrameCounter, y=value, color=dataType)) + 
+  ggplot(aes(x=timeS, y=value, color=dataType)) + 
   geom_line()
 
 #smooth the data. 
+#Traditionally set to 3 (As of June 2023)
+#At 20 fps, 1 frame = 0.05s. A width of 5 gives 0.05*5 = 0.25 seconds, or 250 ms. 
+#At 30 fps, 1 frame = 0.033s. A width of 8 gives 0.033*8 = 0.266s, or 266ms
+smooth = 9
 all_dat3 = all_dat3 %>%
   dplyr::group_by(LedState) %>% 
-  dplyr::mutate(Region0G = rollapply(Region0G, width = 3, FUN = mean, fill = "extend")) %>%
+  dplyr::mutate(Region0G = rollapply(Region0G, width = smooth, FUN = mean, fill = "extend")) %>%
   dplyr::ungroup()
 
 #max values 
@@ -258,26 +302,34 @@ all_dat3 %>%
 #%plot deinterleaved data to evaluate the raw signal
 #%note: tilelayout allows us to link the x axes of the two graphs so you can zoom in on putative motion artifacts
 
+# downsample so you can embed pdfs in adobe illustrator 
+df_sampled <- all_dat3 %>% sample_frac(0.30)  # Keep X% of the points
+
 # calcium independent 
-ci = ggplot(data = all_dat3[all_dat3$LedState == 1, ], aes(FrameCounter, Region0G)) + 
-  geom_line(linewidth = 0.4) +
-  labs(x = 'ArbTime', y = '415-signal raw isosbestic', title = '') + 
+ci = ggplot(data = df_sampled[df_sampled$LedState == 1, ], aes(timeS, Region0G)) + 
+  geom_line(linewidth = 0.4, color = "magenta3") +
+  labs(x = 'timeS', y = '415-signal raw isosbestic', title = '') + 
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 25)) +
+  guides(x = guide_prism_minor()) +
   theme_classic()
 ci
 
 # calcium dependent 
-cd = ggplot(data = all_dat3[all_dat3$LedState == 2, ], aes(FrameCounter, Region0G)) + 
-  geom_line(linewidth = 0.4) +
-  labs(x = 'ArbTime', y = '470-signal raw calcium dependent', title = '') + 
+cd = ggplot(data = df_sampled[df_sampled$LedState == 2, ], aes(timeS, Region0G)) + 
+  geom_line(linewidth = 0.4, color="green3") +
+  labs(x = 'timeS', y = '470-signal raw calcium dependent', title = '') + 
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 25)) +
+  guides(x = guide_prism_minor()) +
   theme_classic()
 cd
-ggplotly(cd)
+#ggplotly(cd)
 
 #put these together on the same plot 
 # use ggplotGrob, grid.draw, and rbind to equalize the x-axes 
 gA <- ggplotGrob(ci)
 gB <- ggplotGrob(cd)
-png(paste(plotdir,"fp_raw_Smoothing", ".png", sep=""), width = 20, height = 15, units = 'cm', res = 500)
+png(paste(plotdir,"fp_raw_Smoothing","_lowPass",cutoff, "_.png", sep=""), width = 12, height = 10, units = 'cm', res = 300)
+#pdf(paste(plotdir,"fp_raw_Smoothing","_lowPass",cutoff, "_.pdf", sep=""), width = 5, height = 4)
 grid::grid.newpage()
 grid::grid.draw(rbind(gA, gB))
 dev.off()
@@ -316,14 +368,14 @@ fps = isos %>% dplyr::group_by(date = format(dateTime, "%Y-%m-%d"),
   dplyr::summarize(count=n())
 fps = mean(fps$count)
 fps = round(fps,0)
-
+fps
 #parameter fitting: https://stats.stackexchange.com/questions/160552/why-is-nls-giving-me-singular-gradient-matrix-at-initial-parameter-estimates 
-c.0 <- min(all_dat3$Region0G) * 0.5
-model.0 <- lm(log(Region0G - c.0) ~ FrameCounter, 
-              data = isos, 
-              na.action = na.exclude)
-all(is.na(isos$Region0G))
-summary(model.0); coef(model.0)
+# c.0 <- min(all_dat3$Region0G) * 0.5
+# model.0 <- lm(log(Region0G - c.0) ~ timeS, 
+#               data = isos, 
+#               na.action = na.exclude)
+# all(is.na(isos$Region0G))
+# summary(model.0); coef(model.0)
 
 # Fit exponential decay model 
 # Approach 1: from this blog post: https://martinlab.chem.umass.edu/r-fitting-data/
@@ -341,7 +393,7 @@ summary(model.0); coef(model.0)
 # SSasymp is a shortcut that guesses it's own parameters, and instead of fitting the rate constant α directly (as above), 
 # it searches for the logarithm of α: y(t)∼yf+(y0−yf)e^−exp(logα)t
 # "The only benefit of na.exclude over na.omit is that the former will retain the original number of rows in the data. "
-fit <- nls(Region0G ~ SSasymp(FrameCounter, yf, y0, log_alpha), 
+fit <- nls(Region0G ~ SSasymp(timeS, yf, y0, log_alpha), 
            data = isos, 
            na.action=na.exclude) #if it doesnt run with na.exclude, try na.omit
 
@@ -354,16 +406,16 @@ paraters = tidy(fit)
 #option 
 # starting values
 # f <- function(x,a,b) {a * exp(b * x)}
-# fm0 <- nls(log(Region0G) ~ log(f(FrameCounter, a, b)), isos, start = c(a = 0.001, b = 0.01))
+# fm0 <- nls(log(Region0G) ~ log(f(timeS, a, b)), isos, start = c(a = 0.001, b = 0.01))
 # nls(y ~ f(x, a, b), dat2, start = coef(fm0))
 # #option
-# nls(Region0G ~ exp(b * FrameCounter), isos, start = c(b = 0.009), alg = "plinear")
+# nls(Region0G ~ exp(b * timeS), isos, start = c(b = 0.009), alg = "plinear")
 # #option
-# nls(Region0G ~ exp(loga + b * FrameCounter), data=isos, start = list(loga = log(1), b = 0.009))
+# nls(Region0G ~ exp(loga + b * timeS), data=isos, start = list(loga = log(1), b = 0.009))
 #testing above testing above testing above testing above
 
 #plot isosbesticExponentialDecayFit
-qplot(FrameCounter, Region0G, data = augment(fit)) + 
+qplot(timeS, Region0G, data = augment(fit)) + 
   geom_line(aes(y = .fitted), color = "red") + 
   theme_classic()
 ggsave(filename = paste(plotdir,"isosbesticExponentialDecayFit", ".pdf", sep=""), width = 15, height = 4, units = 'cm')
@@ -388,11 +440,11 @@ gcamp.fitted = gcamp %>%
 #robust regression with bisquare weighting function
 rr.bisquare <- rlm(Region0G ~ .fitted, data=gcamp.fitted, psi = psi.bisquare, na.action = na.exclude)
 summary(rr.bisquare)
-rr.bisquare$fitted.values
+#rr.bisquare$fitted.values
 length(rr.bisquare$fitted.values) #this will be too few values if there are NAs in the data@ 
 #use augment + newdata to retain NAs (ie full dataset)
 rlm.fitted = augment(rr.bisquare, newdata=gcamp.fitted)
-rlm.fitted$.fitted
+#rlm.fitted$.fitted
 
 rr.bisquare$coefficients[[1]] #first coefficient is the y intercept 
 rr.bisquare$coefficients[[2]] #second coefficient is the first regression coefficient 
@@ -410,28 +462,27 @@ gcamp.fitted2$normalizedF = gcamp.fitted2$Region0G/gcamp.fitted2$FP.lin_fit
 
 # plot 415 data fit with biexponential
 p1 = ggplot() + 
-  geom_line(data=gcamp.fitted2, aes(x= index, y = Region0G.415)) + 
-  geom_line(data=gcamp.fitted2, aes(x=index, y = .fitted), color = "red") + 
+  geom_line(data=gcamp.fitted2, aes(x= timeS, y = Region0G.415)) + 
+  geom_line(data=gcamp.fitted2, aes(x=timeS, y = .fitted), color = "red") + 
   ggtitle("415 data fit with biexponential")
-p1  
-ggsave(filename = paste(plotdir,"415 data fit with biexponential", ".pdf", sep=""), width = 15, height = 4, units = 'cm')
+#p1  
+ggsave(filename = paste(plotdir,"415 data fit with biexponential", ".pdf", sep=""),p1, width = 15, height = 4, units = 'cm')
 
 # plot linearly scaled biexponential fit over 470 data
 p2 = ggplot() + 
-  geom_line(data=gcamp.fitted2, aes(x=index, y = Region0G)) + 
-  geom_line(data=gcamp.fitted2, aes(x=index, y = FP.lin_fit), color = "red") + 
+  geom_line(data=gcamp.fitted2, aes(x=timeS, y = Region0G)) + 
+  geom_line(data=gcamp.fitted2, aes(x=timeS, y = FP.lin_fit), color = "red") + 
   ggtitle("linearly scaled biexponential fit over 470 data")
-p2
-ggsave(filename = paste(plotdir,"linearly scaled biexponential fit over 470 data", ".pdf", sep=""), width = 15, height = 4, units = 'cm')
+#p2
+ggsave(filename = paste(plotdir,"linearly scaled biexponential fit over 470 data", ".pdf", sep=""),p2, width = 15, height = 4, units = 'cm')
 
 # plot normalzedF 
 p3 = ggplot() + 
-  #geom_line(data=gcamp.fitted2, aes(x=index, y = Region0G)) + 
-  geom_line(data=gcamp.fitted2, aes(x=index, y = normalizedF), color = "black", size = 0.1) + 
+  #geom_line(data=gcamp.fitted2, aes(x=timeS, y = Region0G)) + 
+  geom_line(data=gcamp.fitted2, aes(x=timeS, y = normalizedF), color = "black", size = 0.1) + 
   ggtitle("normalizedF")
-p3
-ggplotly(p3)
-ggsave(filename = paste(plotdir,"normalizedF", ".pdf", sep=""), width = 15, height = 4, units = 'cm')
+#p3
+ggsave(filename = paste(plotdir,"normalizedF", ".pdf", sep=""), p3, width = 15, height = 4, units = 'cm')
 
 # %alternative normalization method -- subtracting or dividing scaled 415 from 470
 # From sage: 
@@ -450,7 +501,7 @@ all_dat3W = all_dat3 %>%
               values_from = Region0G) %>%
   dplyr::rename(Region0G = `2`) %>%
   dplyr::rename(Region0G.415 = `1`) %>%
-  dplyr::mutate(Region0G.415 = lag(Region0G.415, n=1, order_by=FrameCounter)) #this is lead or lag 
+  dplyr::mutate(Region0G.415 = lag(Region0G.415, n=1, order_by=timeS)) #this is lead or lag 
 str(all_dat3W)
 
 #get rid of rows with NA in the data channels
@@ -471,7 +522,7 @@ scaled415.470$fitted.values
 length(scaled415.470$fitted.values) #this will be too few rows if there are NAs in the data 
 #use augment to retain NAs (i.e. full dataset) in fitted values
 lm.fitted = augment(scaled415.470, newdata=gcamp.fitted3)
-lm.fitted$.fitted
+#lm.fitted$.fitted
 
 #putscaled415.470 fitted values back into dataframe
 gcamp.fitted3 = cbind(gcamp.fitted3, scaled415.470 = lm.fitted$.fitted)
@@ -480,6 +531,15 @@ gcamp.fitted3 = gcamp.fitted3 %>%
   dplyr::mutate(lmQuotient = Region0G/scaled415.470) %>%
   dplyr::mutate(lmDifference = Region0G-scaled415.470)
 
+#plot scaled415.470 
+#y=scaled415.470$coefficients[[1]] #first coefficient is the y intercept 
+#fc=scaled415.470$coefficients[[2]] #second coefficient is the first regression coefficient 
+ggplot() + 
+  geom_line(data=gcamp.fitted3, aes(x=timeS, y = scaled415.470), color = "red", size = 0.1) + 
+  #geom_line(data=gcamp.fitted3, aes(x=timeS, y = lmQuotient), color = "black", size = 0.1) + 
+  ggtitle("scaled415.470")
+
+#OTHER METHODS OF NORMALIZATION
 # deltaf/f based on 465/405
 # Zhe Zhang. F = 465 nm LED / 405 nm LED. And then calculated as (F-F0)/F0 in which F0 was the mean of all data points during the trial. 
 meanRegion0G = mean(gcamp.fitted3$Region0G, na.rm=TRUE)
@@ -495,69 +555,186 @@ gcamp.fitted3 = gcamp.fitted3 %>%
 # Based on TDT: dF/F is a relative change metric, uses sliding average window as the baseline signal Fo.
 #'Window Duration' can be 3 to 120 seconds. The dF/F calculation, which is (F - Fo)/ Fo is performed on each demodulated stream before differencing occurs. 
 # 10fps * 30s = 300
-windowRoll = fps*60
+windowRoll = fps*20
 gcamp.fitted3 = gcamp.fitted3 %>% 
   dplyr::mutate(slideMean = caTools::runmean(x = gcamp.fitted3$Region0G, k = windowRoll,endrule="keep")) %>%
   dplyr::mutate(deltaFslide = (Region0G - slideMean)/slideMean)
 
+######################
+# Baseline correction 
+#
+######################
+# following Luping Yin...Dayu Lin Et al 2022
+# 'Matlab funciton msbackadj with a moving window of 25% of the total recording duration was applied to the raw signal
+# to obtain the instantaneous baseline signal 
+# try this: https://cran.r-project.org/web/packages/baseline/baseline.pdf 
+
+# use a pause to ensure the base R plots get saved appropriately
+testit <- function(x){
+  p1 <- proc.time()
+  Sys.sleep(x)
+  proc.time() - p1 # The cpu usage should be negligible
+}
+
+# OPTION 1: follow Luping Yin...Dayu Lin Et al 2022 correction 
+# Calculate DeltaF/F as Fraw-Fbaseline/Fbaseline, where baseline is calculated with msbackadj
+# THIS IS GENERALLY NOT WORKING. DUE TO PHOTOBLEACHING? 
+# metric= gcamp.fitted3$Region0G
+# metric[is.na(metric)]<-mean(metric[1:trim*1.01],na.rm=TRUE)
+# metric.bc = baseline(matrix(metric, nrow=1), method='irls')
+# # Plot with base R by opening a jpeg file, then close the file.
+# plot(metric.bc)
+# png(paste(plotdir, "baselineCorrected_compare_Region0G.png", sep=""), width = 500, height = 300)
+# plot(metric.bc)
+# dev.off()
+# #get corrected data back into df
+# corrected = getCorrected(metric.bc)
+# #make sure the corrected vector length is same length as the df
+# length(corrected); length(gcamp.fitted3$Region0G)
+# gcamp.fitted3["Region0G.bc"] = corrected[1,]
+# gcamp.fitted3$DeltaRegion0G = (gcamp.fitted3$Region0G - gcamp.fitted3$Region0G.bc)/gcamp.fitted3$Region0G.bc
+#plot 
+# ggplot() + 
+#   geom_line(data=gcamp.fitted3, aes(x=timeS, y = DeltaRegion0G), color = "red") + 
+#   scale_x_continuous(breaks = scales::pretty_breaks(n = 200)) +
+#   #guides(x = guide_prism_minor()) +
+#   ggtitle("baselineCorrected")
+
+# OPTION 2: isolate lmQuotient, and then do a baseline correction 
+metric = gcamp.fitted3$lmQuotient
+metric[is.na(metric)]<-mean(metric[1:trim*1.01],na.rm=TRUE)
+metric.bc = baseline(matrix(metric, nrow=1), method='irls')
+# Plot with base R by opening a jpeg file, then close the file.
+plot(metric.bc)
+testit(7)
+png(paste(plotdir, "baselineCorrected_compare_lmQ.png", sep=""), width = 500, height = 300)
+plot(metric.bc)
+dev.off()
+#get corrected data back into df
+corrected = getCorrected(metric.bc)
+#make sure the corrected vector length is same length as the df
+length(corrected); length(gcamp.fitted3$lmQuotient)
+gcamp.fitted3["lmQ.bc"] = corrected[1,]
+#plot 
+x8 = ggplot() + 
+  #geom_line(data=head(gcamp.fitted3, n = 5000), aes(x=timeS, y = deltaFslide), color = "red") + 
+  geom_line(data=gcamp.fitted3, aes(x=timeS, y = lmQ.bc), color = "red") + 
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 200)) +
+  #guides(x = guide_prism_minor()) +
+  ggtitle("lmQ baselineCorrected")
+#x8
+ggsave(filename = paste(plotdir,"baselineCorrected.lmQ", ".pdf", sep=""), x8, width = 15, height = 4, units = 'cm')
+
+#down-sample so you can embed in adobe illustrator 
+# downsample so you can embed pdfs in adobe illustrator 
+df_sampled <- gcamp.fitted3 %>% sample_frac(0.05)  # Keep X% of the points
+#z score 
+df_sampled = df_sampled %>%
+  dplyr::mutate(lmQ.bc.Z = (lmQ.bc - mean(lmQ.bc))/sd(lmQ.bc))
+
+x8.1 = ggplot() + 
+  geom_line(data=df_sampled, aes(x=timeS, y = lmQ.bc.Z), color = "black") + 
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 200)) +
+  theme_classic() + 
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+ggsave(filename = paste(plotdir,"baselineCorrected.lmQ.Z_sampled", ".pdf", sep=""), x8.1, width = 10, height = 8, units = 'cm')
+
+# OPTION 3: isolate normalizedF, and then do a baseline correction 
+metric = gcamp.fitted3$normalizedF
+metric[is.na(metric)]<-mean(metric[1:trim*1.01],na.rm=TRUE)
+metric.bc = baseline(matrix(metric, nrow=1), method='irls')
+# Plot with base R by opening a jpeg file, then close the file.
+plot(metric.bc)
+testit(7)
+png(paste(plotdir, "baselineCorrected_compare_normalizedF.png", sep=""), width = 500, height = 300)
+plot(metric.bc)
+dev.off()
+
+#get corrected data back into df
+corrected = getCorrected(metric.bc)
+#make sure the corrected vector length is same length as the df
+length(corrected); length(gcamp.fitted3$normalizedF)
+gcamp.fitted3["nF.bc"] = corrected[1,]
+#plot 
+x9 = ggplot() + 
+  geom_line(data=gcamp.fitted3, aes(x=timeS, y = nF.bc), color = "red") + 
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 200)) +
+  #guides(x = guide_prism_minor()) +
+  ggtitle("lmQ baselineCorrected")
+#x9
+ggsave(filename = paste(plotdir,"baselineCorrected.nF", ".pdf", sep=""), x9, width = 15, height = 4, units = 'cm')
+
+
+######################
+# Plot everything 
+#
+######################
+xRaw = ggplot() + 
+  #geom_line(data=gcamp.fitted3, aes(x=timeS, y = Region0G)) + 
+  geom_line(data=gcamp.fitted3, aes(x=timeS, y = Region0G), color = "red", size = 0.1) + 
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 200)) +
+  ggtitle("Region0G")
+#xRaw 
+
 #reproducing sages final plot 
 x0 = ggplot() + 
-  geom_line(data=gcamp.fitted3, aes(x=index, y = Region0G))  +
-  geom_line(data=gcamp.fitted3, aes(x=index, y = scaled415.470), color = "red") + 
+  geom_line(data=gcamp.fitted3, aes(x=timeS, y = Region0G))  +
+  geom_line(data=gcamp.fitted3, aes(x=timeS, y = scaled415.470), color = "red") + 
   ggtitle("470Raw and scaled415.470")
-x0
+#x0
 ggsave(filename = paste(plotdir,"470Raw and scaled415.470", ".pdf", sep=""), x0, width = 15, height = 4, units = 'cm')
-
 x1 = ggplot() + 
-  geom_line(data=gcamp.fitted3, aes(x=index, y = Region0G-scaled415.470))  +
+  geom_line(data=gcamp.fitted3, aes(x=timeS, y = Region0G-scaled415.470))  +
   ggtitle("470Raw-scaled415.470")
-x1
+#x1
 ggsave(filename = paste(plotdir,"470Raw-scaled415.470", ".pdf", sep=""), x1, width = 15, height = 4, units = 'cm')
 
 x2 = ggplot() + 
-  #geom_line(data=gcamp.fitted3, aes(x=index, y = Region0G)) + 
-  geom_line(data=gcamp.fitted3, aes(x=index, y = lmQuotient), color = "red", size = 0.1) + 
+  #geom_line(data=gcamp.fitted3, aes(x=timeS, y = Region0G)) + 
+  geom_line(data=gcamp.fitted3, aes(x=timeS, y = lmQuotient), color = "red", size = 0.1) + 
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 200)) +
   ggtitle("470 lmQuotient")
-x2
-ggplotly(x2)
+#x2
+#ggplotly(x2)
 ggsave(filename = paste(plotdir,"470 lmQuotient", ".pdf", sep=""), x2, width = 15, height = 4, units = 'cm')
 
-#lmquotient by timestamp
-p = ggplot() + 
-  geom_line(data=gcamp.fitted3, aes(x=dateTime, y = lmQuotient), color = "red", size = 0.1) + 
-  ggtitle("470 lmQuotient")
-ggplotly(p)
 
 #remember, can't plot raw 470 against normalized because values are divergent! 
 x3 = ggplot() + 
-  #geom_line(data=gcamp.fitted3, aes(x=index, y = Region0G))  +
-  geom_line(data=gcamp.fitted3, aes(x=index, y = normalizedF), color = "red") + 
+  #geom_line(data=gcamp.fitted3, aes(x=timeS, y = Region0G))  +
+  geom_line(data=gcamp.fitted3, aes(x=timeS, y = normalizedF), color = "red") + 
   ggtitle("470Raw and normalizedF")
-x3
+#x3
 ggsave(filename = paste(plotdir,"normalizedF", ".pdf", sep=""), x3, width = 15, height = 4, units = 'cm')
 
 x4 = ggplot() + 
-  #geom_line(data=gcamp.fitted3, aes(x=index, y = Region0G))  +
-  geom_line(data=gcamp.fitted3, aes(x=index, y = deltaFq), color = "red") + 
+  #geom_line(data=gcamp.fitted3, aes(x=timeS, y = Region0G))  +
+  geom_line(data=gcamp.fitted3, aes(x=timeS, y = deltaFq), color = "red") + 
   ggtitle("deltaFq")
-x4
+#x4
 ggsave(filename = paste(plotdir,"deltaFq", ".pdf", sep=""), x4, width = 15, height = 4, units = 'cm')
 
 x5 = ggplot() + 
-  geom_line(data=gcamp.fitted3, aes(x=index, y = deltaFfit), color = "red") + 
+  geom_line(data=gcamp.fitted3, aes(x=timeS, y = deltaFfit), color = "red") + 
   ggtitle("deltaFfit")
-x5
+#x5
 ggsave(filename = paste(plotdir,"deltaFfit", ".pdf", sep=""), x5, width = 15, height = 4, units = 'cm')
 
 x6 = ggplot() + 
-  #geom_line(data=head(gcamp.fitted3, n = 5000), aes(x=index, y = deltaFslide), color = "red") + 
-  geom_line(data=gcamp.fitted3, aes(x=index, y = deltaFslide), color = "red") + 
+  #geom_line(data=head(gcamp.fitted3, n = 5000), aes(x=timeS, y = deltaFslide), color = "red") + 
+  geom_line(data=gcamp.fitted3, aes(x=timeS, y = deltaFslide), color = "red") + 
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 200)) +
+  #guides(x = guide_prism_minor()) +
   ggtitle("deltaFslide")
-x6
+#x6
 ggsave(filename = paste(plotdir,"deltaFslide", ".pdf", sep=""), x6, width = 15, height = 4, units = 'cm')
 
-# save gcamp.fitted2 or gcamp.fitted3 as a csv
-write.table(gcamp.fitted3, file=paste( "NP_processed", ".csv", sep=""), sep=",", row.names = FALSE)
+#extract a unique identifier from File.Path
+identifier = str_extract(gcamp.fitted3$File.Path[1], "(?<=alldata)(.+)(?=\\.)")
 
+# save gcamp.fitted2 or gcamp.fitted3 as a csv 
+write.table(gcamp.fitted3, file=paste(plotdir, "NP_processed_",identifier, "_trim",trim,"_trim2",trim2, "_smooth",smooth, ".csv", sep=""), sep=",", row.names = FALSE)
 
 
