@@ -104,10 +104,10 @@ gcamp.fitted2$FP.lin_fit = gcamp.fitted2$.fitted * rr.bisquare$coefficients[[2]]
 gcamp.fitted2$normalizedF = gcamp.fitted2$Region0G/gcamp.fitted2$FP.lin_fit
 ```
 - Plot the linearly scaled exponential decay fit over the GCaMP (470) data
-<img src="README_images/script1/linearly scaled biexponential fit over 470 data.pdf" width="400" />
+<img src="README_images/script1/linearly scaled biexponential fit over 470 data.png" width="400" />
 
 -   Plot the normalized data 
-<img src="README_images/script1/normalizedF.pdf" width="400" />
+<img src="README_images/script1/normalizedF.png" width="400" />
 
 ------------------------------------------------------------------------
 
