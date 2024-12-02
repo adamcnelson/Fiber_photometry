@@ -22,16 +22,30 @@ Fiber photometry is a way to record neuronal calcium events in animals during na
 
 -   Bleach detrending 
 -   Data smoothing
--   Remove high-frequency noise using Butterworth filter 
--   Trim off flouresence values from the beginning and end of the recording (user defined)
+-   Remove high-frequency noise 
+-   Trim off flouresence values from the first last/minutes of recording (user defined)
 -   Baseline correction
+-   Date-time timestamp (POSIXct)
 -   Find peaks
 -   Calculate dF/F using a number of different methods
 
 ### Downloading the test dataset
-The following data was read in from the [Neurophotometrics system using a Bonsai workflow](https://neurophotometrics.com/bonsai-manual).
+The following data was read in from the [Neurophotometrics system using a Bonsai workflow](https://neurophotometrics.com/bonsai-manual). Note that in this workflow the flouresence data and associated timestamp values are read in as separate files.
 
-<img src="README_images/script1/Screenshot 2024-12-02 at 11.04.21 AM.jpeg" width="576" />
+``` r
+all_dat
+```
+<img src="README_images/script1/Screenshot 2024-12-02 at 11.04.21 AM.png" width="576" />
+
+``` r
+all_dat
+```
+<img src="README_images/script1/SScreenshot 2024-12-02 at 12.06.08 PM.png" width="576" />
+
+
+
+
+
 ------------------------------------------------------------------------
 
 Authors: Adam Nelson
