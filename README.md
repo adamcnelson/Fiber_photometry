@@ -4,7 +4,9 @@ R script for analysis of fiber photometry, behavior, and body temperature
 
 ## Introduction
 
-Fiber photometry is a way to record neuronal calcium events in animals during naturalistic behavioral and physiological responses. These three scripts serve three function. (1) Process fiber photometric data to yield different options of dF/F. (2) Align the dF/F data with behavior and body temperature data steams. (3) Aggregate multiple experiments for perform statistics.
+Fiber photometry is a way to record neuronal calcium events in animals during naturalistic behavioral and physiological responses. These three scripts serve two functions.
+(1) Process fiber photometric data to yield different options of dF/F.
+(2) Align the dF/F data with behavior and body temperature data steams. 
 
 ## Installation
 * One option is to install these scripts by cloning them with Git :
@@ -81,10 +83,8 @@ Visualize aligned calcium-dependent (GCaMP) and calcium-independent (isosbestic)
 ### Normalize data 
 Here I present a few options for detrending the data and dealing with outlier values. 
 #### Option 1: Correct the GCaMP data with an exponential decay model fit to the isosbestic data 
- -  Helpful tutorial on fitting exponential decay models in R from [Douglas Watson](https://douglas-watson.github.io/post/2018-09_exponential_curve_fitting/)
- -  Use `nls`, the R base function to fit non-linear equations, and `SSasymp`, self-starting function that guesses its own start parameters.
- -  Use `na.exclude` to retain the original number of rows in the data 
- -  Use Broom's `augment` funciton to extract the predicted values. 
+
+ -  Here we use `nls`, the R base function to fit non-linear equations, and `SSasymp`, a self-starting function that guesses its own start parameters. To retain the original number of rows in the data, use `na.exclude`. Use Broom's `augment` funciton to extract the predicted values. 
  
 ``` r
 fit <- nls(Region0G ~ SSasymp(timeS, yf, y0, log_alpha), 
@@ -102,15 +102,14 @@ rr.bisquare <- rlm(Region0G ~ .fitted, data=gcamp.fitted, psi = psi.bisquare, na
 ``` r
 gcamp.fitted2$FP.lin_fit = gcamp.fitted2$.fitted * rr.bisquare$coefficients[[2]] + rr.bisquare$coefficients[[1]]
 ```
--   Finally, derive a normalized fluoresence value by dividing the GCaMP (470) values by the scaled fit (FP_lit_fit). 
-``` r
-gcamp.fitted2$normalizedF = gcamp.fitted2$Region0G/gcamp.fitted2$FP.lin_fit
-```
 
 - Plot the linearly scaled exponential decay fit (red line) over the GCaMP (470) data (black line)
 <img src="README_images/script1/linearly scaled biexponential fit over 470 data.png" width="400" />
 
--   Plot the normalized data 
+-   Finally, derive a normalized fluoresence value by dividing the GCaMP (470) values by the scaled fit (FP_lit_fit). 
+``` r
+gcamp.fitted2$normalizedF = gcamp.fitted2$Region0G/gcamp.fitted2$FP.lin_fit
+```
 <img src="README_images/script1/normalizedF.png" width="400" />
 
 #### Option 2: Correct the GCaMP data with an linear model fit to GCaMP (470) and isosbestic (415) values.
@@ -125,6 +124,19 @@ gcamp.fitted3 = gcamp.fitted3 %>%
   dplyr::mutate(lmQuotient = Region0G/scaled415.470)
 ```
 <img src="README_images/script1/lmQuotient.png" width="400" />
+
+In this example, the two different options produce very similar normalized dF/F calcium traces. However, depending on the details of a recording, they can sometimes be different. 
+
+### Baseline correction
+-   Because we observe occasional artifactual shifts in baseline dF/F values, we use the Baseline package's `baseline` funciton correct normalized dF/F data using the iterative least squares method. First we isolate lmQuotient, then do a baseline correction.
+```r 
+metric = gcamp.fitted3$lmQuotient
+metric[is.na(metric)]<-mean(metric[1:trim*1.01],na.rm=TRUE)
+metric.bc = baseline(matrix(metric, nrow=1), method='irls')
+``` 
+<img src="README_images/script1/baselineCorrected_compare_lmQ.png" width="400" />
+
+
 ------------------------------------------------------------------------
 
 Authors: Adam Nelson
