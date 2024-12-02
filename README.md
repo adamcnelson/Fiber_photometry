@@ -37,12 +37,12 @@ GCaMP channel:  LedState == 2
 ``` r
 all_dat
 ```
-<img src="README_images/script1/Screenshot 2024-12-02 at 11.04.21 AM.png" width="300" />
+<img src="README_images/script1/Screenshot 2024-12-02 at 11.04.21 AM.png" width="550" />
 
 ``` r
 computerClock
 ```
-<img src="README_images/script1/Screenshot 2024-12-02 at 12.06.08 PM.png" width="576" />
+<img src="README_images/script1/Screenshot 2024-12-02 at 12.06.08 PM.png" width="300" />
 
 ### Smooth data 
 The ButterEndEffect function removes high-frequency noise
@@ -63,7 +63,11 @@ Alternatively, use the `rollapply` function to smooth the data with a rolling av
 The beginning and end of a fiber photometry recording is very often noisy due to artifacts. The `trim_region0G` function converts calcium fluorescence values to NA for a user-defined number of minutes. 
 
 ``` r
-trim_region0G
+trim_region0G <- function(data, led_state, trim, trim2) {
+  data %>%
+    dplyr::filter(LedState == led_state) %>%
+    mutate(Region0G = ifelse(row_number() <= trim | row_number() >= trim2, NA, Region0G))
+}
 ```
 
 We often remove fluorescence from at least the first 10 minutes (~20,000 rows at 30 Hz). 
@@ -87,6 +91,23 @@ fit <- nls(Region0G ~ SSasymp(timeS, yf, y0, log_alpha),
 fitted = augment(fit, newdata=isos)
 paraters = tidy(fit)
 ```
+-   Linearly scale the fitted decay to the GCaMP (470) data using robust fit with a bisquare weighting function (rr.bisquare)
+-   Then scale the fitted decay with coefficients from the robust fit (FP_lit_fit).
+-   Finally, derive a normalized fluoresence value by dividing the GCaMP (470) values by the scaled fit (FP_lit_fit). 
+``` r
+rr.bisquare <- rlm(Region0G ~ .fitted, data=gcamp.fitted, psi = psi.bisquare, na.action = na.exclude)
+```
+``` r
+gcamp.fitted2$FP.lin_fit = gcamp.fitted2$.fitted * rr.bisquare$coefficients[[2]] + rr.bisquare$coefficients[[1]]
+```
+``` r
+gcamp.fitted2$normalizedF = gcamp.fitted2$Region0G/gcamp.fitted2$FP.lin_fit
+```
+- Plot the linearly scaled exponential decay fit over the GCaMP (470) data
+<img src="README_images/script1/linearly scaled biexponential fit over 470 data.pdf" width="400" />
+
+-   Plot the normalized data 
+<img src="README_images/script1/normalizedF.pdf" width="400" />
 
 ------------------------------------------------------------------------
 
