@@ -31,7 +31,9 @@ Fiber photometry is a way to record neuronal calcium events in animals during na
 
 ### Example dataset
 The following data was read in from the [Neurophotometrics system using a Bonsai workflow](https://neurophotometrics.com/bonsai-manual). Note that in this workflow the fluorescence data and associated timestamp values are read in as separate files.
+
 Isosbestic channel: LedState == 1
+
 GCaMP channel:  LedState == 2
 
 ``` r
@@ -51,11 +53,11 @@ ButterEndEffect
 ```
 Before
 
-<img src="README_images/script1/butterworth_before.png" width="400" />
+<img src="README_images/script1/butterworth_before.png" width="300" />
 
 After
 
-<img src="README_images/script1/butterworth_after.png" width="400" />
+<img src="README_images/script1/butterworth_after.png" width="300" />
 
 Alternatively, use the `rollapply` function to smooth the data with a rolling average
 
@@ -72,13 +74,14 @@ trim_region0G <- function(data, led_state, trim, trim2) {
 
 We often remove fluorescence from at least the first 10 minutes (~20,000 rows at 30 Hz). 
 
-We can then align and visualize the calcium-dependent (GCaMP) and calcium-independent (isosbestic) signals using `ggplotGrob`
+Visualize aligned calcium-dependent (GCaMP) and calcium-independent (isosbestic) signals using `ggplotGrob`
+
 <img src="README_images/script1/fp_raw_Smoothing_lowPass0.133333333333333_.png" width="400" />
 
 ### Normalize data 
-Here we present a few options for detrending the data and dealing with outlier values. 
+Here I present a few options for detrending the data and dealing with outlier values. 
 #### Option 1: Correct the GCaMP data with an exponential decay model fit to the isosbestic data 
- -  Helpful tutorial from [Douglas Watson](https://douglas-watson.github.io/post/2018-09_exponential_curve_fitting/)
+ -  Helpful tutorial on fitting exponential decay models in R from [Douglas Watson](https://douglas-watson.github.io/post/2018-09_exponential_curve_fitting/)
  -  Use `nls`, the R base function to fit non-linear equations, and `SSasymp`, self-starting function that guesses its own start parameters.
  -  Use `na.exclude` to retain the original number of rows in the data 
  -  Use Broom's `augment` funciton to extract the predicted values. 
@@ -92,23 +95,36 @@ fitted = augment(fit, newdata=isos)
 paraters = tidy(fit)
 ```
 -   Linearly scale the fitted decay to the GCaMP (470) data using robust fit with a bisquare weighting function (rr.bisquare)
--   Then scale the fitted decay with coefficients from the robust fit (FP_lit_fit).
--   Finally, derive a normalized fluoresence value by dividing the GCaMP (470) values by the scaled fit (FP_lit_fit). 
 ``` r
 rr.bisquare <- rlm(Region0G ~ .fitted, data=gcamp.fitted, psi = psi.bisquare, na.action = na.exclude)
 ```
+-   Then scale the fitted decay with coefficients from the robust fit (FP_lit_fit).
 ``` r
 gcamp.fitted2$FP.lin_fit = gcamp.fitted2$.fitted * rr.bisquare$coefficients[[2]] + rr.bisquare$coefficients[[1]]
 ```
+-   Finally, derive a normalized fluoresence value by dividing the GCaMP (470) values by the scaled fit (FP_lit_fit). 
 ``` r
 gcamp.fitted2$normalizedF = gcamp.fitted2$Region0G/gcamp.fitted2$FP.lin_fit
 ```
-- Plot the linearly scaled exponential decay fit over the GCaMP (470) data
+
+- Plot the linearly scaled exponential decay fit (red line) over the GCaMP (470) data (black line)
 <img src="README_images/script1/linearly scaled biexponential fit over 470 data.png" width="400" />
 
 -   Plot the normalized data 
 <img src="README_images/script1/normalizedF.png" width="400" />
 
+#### Option 2: Correct the GCaMP data with an linear model fit to GCaMP (470) and isosbestic (415) values.
+-   Extract the fitted values of this regression using `lm` and Broom's `augment` function 
+```r
+scaled415.470 = lm(Region0G ~ Region0G.415 , data = gcamp.fitted3)
+lm.fitted = augment(scaled415.470, newdata=gcamp.fitted3)
+```
+-   Divide the GCaMP (470) signal by the fitted values
+```r
+gcamp.fitted3 = gcamp.fitted3 %>% 
+  dplyr::mutate(lmQuotient = Region0G/scaled415.470)
+```
+<img src="README_images/script1/lmQuotient.png" width="400" />
 ------------------------------------------------------------------------
 
 Authors: Adam Nelson
