@@ -168,7 +168,7 @@ write.table(gcamp.fitted3, file=paste(plotdir, "NP_processed_",identifier, "_tri
 -   Align photometry fluoresence data with behavioral states and body temperature (Tb). 
 
 The following behavior-state data data were read in from a [Noldus Ethovision XT workflow](https://www.noldus.com/ethovision-xt?utm_term=&utm_campaign=PM+-+A%7CEV%7CBranded(E%7CP)+-+CA%2BUSA&utm_source=adwords&utm_medium=ppc&hsa_acc=5401040478&hsa_cam=20431558064&hsa_grp=&hsa_ad=&hsa_src=x&hsa_tgt=&hsa_kw=&hsa_mt=&hsa_net=adwords&hsa_ver=3&gad_source=1&gbraid=0AAAAAD_LcAfmYuZlzClWokbPynoynQE6S&gclid=CjwKCAiA9bq6BhAKEiwAH6bqoBSEvou-l48CiTfdlWPWijD_tPLWehXjGLBnQq64BueULimNC0dghxoCHWMQAvD_BwE).
-The body temperature data were obtained from [Star-Oddi DST nano-T temperature loggers] (https://www.star-oddi.com/products/temperature-pressure-data-loggers/small-thermometer).
+The body temperature data were obtained from [Star-Oddi DST nano-T temperature loggers](https://www.star-oddi.com/products/temperature-pressure-data-loggers/small-thermometer).
 
 ### Timestamp data massaging
 This script begins with several data massaging steps to generate a `POSIXct` timestamp for each data stream (photometry, behavior, and Tb), and then aligns those steams according to the timestamps. 
@@ -189,12 +189,23 @@ FP.noldus2$peak <- replace(FP.noldus2$peak, peaks[,2], values=1)
 <img src="README_images/script2/peaks20_trimlength1_6SDs_lmQ.bc.Z.png" width="400" />
 
 ### Examine the relationship between calcium transients and behavior
+
+-   The transients appear to be selective to a particular behavioral state. 
 <img src="README_images/script2/p.ethog,p.lmQ.bc.Z_sampled.png" width="400" />
+
 ### Examine the relationship between calcium transients and Tb.
-These calcium transients appear to occur at a lower Tb.  
+
+-   The calcium transients appear to occur at a lower Tb.  
 <img src="README_images/script2/p.lmQ.bc.Temp.png" width="400" />
+
 ### Put everything together in one aligned plot 
+
+-   The transients occur during a distinct behavioral/physiological state. 
 <img src="README_images/script2/p.ethog,p.lmQ.bc.Z_sampled,p.Tb, p.activ.sampled.png" width="400" />
+
+### Examine calcium events during the onset and offset of a particular behavior
+
+
 
 
 
