@@ -8,7 +8,9 @@ Fiber photometry is a way to record neuronal calcium events in the animal brain 
 (1) Process fiber photometric data to yield different options of dF/F.
 (2) Align the dF/F data with behavior and body temperature data steams.
 
-This resource is intended for researchers using R to process fiber photometric data alongside behavior and physiology time-series data. Many of the steps in Script 1 were cloned from common Matlab signal processing routines. 
+This resource is intended for researchers using R to process fiber photometric data alongside behavior and physiology time-series data. Many of the steps in Script 1 were cloned from Matlab signal processing routines. 
+
+This README illustrates some of the key steps. 
 
 ## Installation
 * One option is to install these scripts by cloning them with Git :
@@ -38,7 +40,7 @@ The following data was read in from the [Neurophotometrics system using a Bonsai
 For reference, here is a tyical Bonsai workflow. 
 <img src="README_images/script1/Screenshot 2024-12-03_Bonsai_workflow.png" width="550" />
 
-Read in the data using 
+Read in the data using `lapply` and `read.table`.
 ``` r
 all_dat
 ```
@@ -50,11 +52,24 @@ computerClock
 <img src="README_images/script1/Screenshot 2024-12-02 at 12.06.08 PM.png" width="300" />
 
 ### Smooth data 
-The `ButterEndEffect` function removes high-frequency noise
+The `ButterEndEffect` function uses the signal package to remove high-frequency noise while padding for end effects. It takes as input a fourth-order butterworth filter. 
 ``` r
 ButterEndEffect <- function(filt,x) {
   signal::filtfilt(filt,c(rev(x),x,rev(x)))[(length(x) + 1):(2 * length(x))]
 }
+
+#define filter and parameters
+order <- 4  # Filter order
+Hz <- 30 
+cutoff <- 2/(Hz/2) # Cutoff frequency
+b <- butter(order, cutoff, type="low")  filter coefficients
+
+#incorporate the filter
+all_dat3 = all_dat3 %>%
+  dplyr::group_by(LedState) %>% 
+  dplyr::mutate(Region0G = ButterEndEffect(b,Region0G))  %>%
+  dplyr::ungroup() 
+
 ```
 Before
 
@@ -97,7 +112,7 @@ fit <- nls(Region0G ~ SSasymp(timeS, yf, y0, log_alpha),
 fitted = augment(fit, newdata=isos)
 parameters = tidy(fit)
 ```
--   Linearly scale the fitted decay to the GCaMP (470nm) data using robust fit with a bisquare weighting function (rr.bisquare)
+-   Linearly scale the fitted decay to the GCaMP (470nm) data using robust fit with a bisquare weighting function (rr.bisquare).
 ``` r
 rr.bisquare <- rlm(Region0G ~ .fitted, data=gcamp.fitted, psi = psi.bisquare, na.action = na.exclude)
 ```
@@ -140,7 +155,9 @@ metric.bc = baseline(matrix(metric, nrow=1), method='irls')
 <img src="README_images/script1/baselineCorrected_compare_lmQ.png" width="400" />
 
 ### Save dataframe as .csv. To be used as input to Script 2. 
-
+```r
+write.table(gcamp.fitted3, file=paste(plotdir, "NP_processed_",identifier, "_trim",trim,"_trim2",trim2, "_smooth",smooth, ".csv", sep=""), sep=",", row.names = FALSE)
+```
 
 ## Script 2: Align processed FP data with behavior and physiology data.
  
@@ -154,7 +171,7 @@ The following behavior-state data data were read in from a [Noldus Ethovision XT
 The body temperature data were obtained from [Star-Oddi DST nano-T temperature loggers] (https://www.star-oddi.com/products/temperature-pressure-data-loggers/small-thermometer).
 
 ### Timestamp data massaging
-This script begins with several data massaging steps to generate a `POSIXct` timestamp for each data stream (photometry, behavior, and Tb). We next align the data accordign to these timestamps. 
+This script begins with several data massaging steps to generate a `POSIXct` timestamp for each data stream (photometry, behavior, and Tb), and then aligns those steams according to the timestamps. 
 
 ### Find peaks algorithmically
 We then use the pracma package function `findpeaks` to find maxima in the photometry time series. We must define two parameters: the distance between each peak (peakdistance) and the number of standard deviations above the mean (SDs).
@@ -169,7 +186,16 @@ peaks <- findpeaks(FP.noldus2$lmQ.bc.Z,
 FP.noldus2$peak <- rep(0, nrow(FP.noldus2))
 FP.noldus2$peak <- replace(FP.noldus2$peak, peaks[,2], values=1)
 ```
-<img src="README_images/script1/peaks20_trimlength1_6SDs_lmQ.bc.Z.png" width="400" />
+<img src="README_images/script2/peaks20_trimlength1_6SDs_lmQ.bc.Z.png" width="400" />
+
+### Examine the relationship between calcium transients and behavior
+<img src="README_images/script2/p.ethog,p.lmQ.bc.Z_sampled.png" width="400" />
+### Examine the relationship between calcium transients and Tb.
+These calcium transients appear to occur at a lower Tb.  
+<img src="README_images/script2/p.lmQ.bc.Temp.png" width="400" />
+### Put everything together in one aligned plot 
+<img src="README_images/script2/p.ethog,p.lmQ.bc.Z_sampled,p.Tb, p.activ.sampled.png" width="400" />
+
 
 
 
