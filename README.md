@@ -5,8 +5,8 @@ Analysis of fiber photometry, behavior, and body temperature time-series data us
 ## Introduction
 
 Fiber photometry is a way to record neuronal calcium events in the animal brain during naturalistic behavioral and physiological responses. These two scripts serve two functions.
-(1) Process fiber photometric data to yield different options of dF/F.
-(2) Align the dF/F data with behavior and body temperature data steams.
+(Script 1) Process fiber photometric data to yield different options of the relative increase in fluorescence (i.e., dF/F).
+(Script 2) Align the dF/F data with behavior and body temperature data steams.
 
 This resource is intended for researchers using R to process fiber photometric data alongside behavior and physiology time-series data. Many of the steps in Script 1 were cloned from Matlab signal processing routines. 
 
@@ -21,11 +21,27 @@ This README illustrates some of the key steps.
     cd your/folder/to/clone/into
     git clone https://github.com/adamcnelson/Fiber_photometry
     ```
+## Example datafiles
+* Fiber photometry GCaMP fluoresence data. 
+    ```
+    ```
+* Behavior data
+    ```
+    ```
+* Body temperature data. Includes Tb for photometry animal as well as its cagemate.
+    ```
+    ```
 
-## Script 1: processing FP data from the Neurophotometrics system.
+The following data was read in from the [Neurophotometrics system using a Bonsai workflow](https://neurophotometrics.com/bonsai-manual). Note that in this workflow the fluorescence data and associated timestamp values are read in as separate files. Isosbestic channel: LedState == 1. GCaMP channel:  LedState == 2.
+
+For reference, here is a typical Bonsai workflow.
+
+<img src="README_images/script1/Screenshot 2024-12-03_Bonsai_workflow.png" width="350" />
  
- Features:
+## Script 1: processing FP data from the Neurophotometrics system.
 
+ Features:
+ 
 -   Bleach detrending 
 -   Remove high-frequency noise 
 -   Trim off fluorescence values from the first last/minutes of recording (user defined)
@@ -34,13 +50,7 @@ This README illustrates some of the key steps.
 -   Find peaks
 -   Calculate dF/F using a number of different methods
 
-### Example dataset
-The following data was read in from the [Neurophotometrics system using a Bonsai workflow](https://neurophotometrics.com/bonsai-manual). Note that in this workflow the fluorescence data and associated timestamp values are read in as separate files. Isosbestic channel: LedState == 1. GCaMP channel:  LedState == 2.
-
-For reference, here is a typical Bonsai workflow. 
-<img src="README_images/script1/Screenshot 2024-12-03_Bonsai_workflow.png" width="350" />
-
-Read in the data using `lapply` and `read.table`.
+### Read in fluoresence and timestamp data using `lapply` and `read.table`.
 ``` r
 all_dat
 ```
@@ -154,7 +164,7 @@ metric.bc = baseline(matrix(metric, nrow=1), method='irls')
 ``` 
 <img src="README_images/script1/baselineCorrected_compare_lmQ.png" width="400" />
 
-### Save dataframe as .csv. To be used as input to Script 2. 
+### Save dataframe as .csv. To be used as input to Script 2. Retain the current parameters in the file name. 
 ```r
 write.table(gcamp.fitted3, file=paste(plotdir, "NP_processed_",identifier, "_trim",trim,"_trim2",trim2, "_smooth",smooth, ".csv", sep=""), sep=",", row.names = FALSE)
 ```
@@ -209,18 +219,20 @@ The transients occur during a distinct behavioral/physiological state.
 ```r
 all_floor2 = all_floor2 %>% 
   arrange(Trial.time) %>%
-  #group_by(huddleState) %>% 
   dplyr::group_by(grp = rleid(huddleState)) %>%
-  #dplyr::mutate(Indicator = ifelse(row_number() == 1, 'start', '')) %>% 
   dplyr::mutate(startStop = case_when(
                 row_number() == n() ~ 'stop',
                 row_number() == 1 ~ 'start')) %>%
   as_tibble() %>%
   tidyr::unite("bStartStop", c(huddleState,startStop), remove=FALSE)
 ```
--   Use the `extract.with.context` function to extract n rows before and after the start/stop frame of a defined behavior. 
+-   Use the `extract.with.context` function to extract n rows of dF/F before and after the start/stop frame of a defined behavior. 
 
 ```r
+#set before/after parameters
+before <- fps*30
+after <- fps*60
+#set the desired behavior
 colname = "bStartStop"    
 rows <- "sleeHud_stop"
 
@@ -283,7 +295,10 @@ str(every_data)
 The calcium activity decreases upon the onset of a specific behavior. 
 <img src="README_images/script2/sleeHud_start_value_lmQuotient_before300_after600_trimLength_1.png" width="400" />
 
-
+-   Save the output; to be aggregated with other experiments for statistics. Add a unique identifier to each filename. 
+```r
+write.table(export, file=paste(plotdir, "NP_noldus_processed_",identifier, ".csv", sep=""), sep=",", row.names = FALSE)
+```
 
 
 ------------------------------------------------------------------------

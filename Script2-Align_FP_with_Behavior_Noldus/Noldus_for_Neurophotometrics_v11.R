@@ -16,26 +16,11 @@ library(pracma)
 library(plotly)
 
 #DIRECTORIES 
-setwd("//data.arcc.uwyo.edu/cluster/alcova/huddlingvidmicro/neurophotometrics/fp_Data/oxycre_3645_july2024/07-29-24_solo_29")
-
+setwd("/Volumes/cluster/alcova/huddlingvidmicro/neurophotometrics/fp_Data/oxycre_3645_july2024/07-26-24_paired_29")
 
 #PLOT DIRECTORY 
 plotdir = paste(getwd(),"/behavior_plots/", sep = "")
 plotdir 
-########################################################################
-########################################################################
-# REMOVE SPACES FROM FILENAMES
-# AND READ IN FILENAMES
-########################################################################
-########################################################################
-# remove_filename_spaces(dir = ".", pattern = "     ", replacement = "") #this function has been deprecated 
-# use command line to remove spaces. cd to the right directory, and copy-paste this code into command line as per 
-# https://stackoverflow.com/questions/16445082/remove-spaces-from-filenames-in-folder 
-# for oldname in *
-#   do
-# newname=`echo $oldname | sed -e 's/ /_/g'`
-# mv "$oldname" "$newname"
-# done
 
 ########################################################################
 ########################################################################
@@ -63,17 +48,7 @@ attr(fp$Time.round.1Sec, "tzone") <- "America/Denver"
 print(fp$Time.round.1Sec)
 str(fp)
 
-#NEXT: 'COMPRESS' fp BY RETURNING THE AVERAGE VALUE FOR EVERY 0.1s FOR ALL THE DATA COLUMS
-# Or, for now, just get the first row of data from each 0.1s 
-#Warning, this step took 6min for a HC dataset
-# Feb.24.2023: maybe solution: temp = fp[!duplicated(fp$Time.round.1Sec),] (just dont know about NAs with this one)
-# fp2 = fp %>%
-#   group_by(Time.round.1Sec) %>%
-#   #filter(row_number()==1) %>%
-#   filter((row_number()==1) %>% replace_na(TRUE))
-#   #filter(all(row_number()==1|is.na(lmQuotient)))
-
-#this step is a lot faster than the option above using group_by
+#NEXT: 'COMPRESS' fp data to a value to every 0.1s for all the data columns
 fp2 = fp[!duplicated(fp$Time.round.1Sec),]
 
 #get Time0: the first dateTime of the Bonsai run, including fp data and the video. 
@@ -92,8 +67,7 @@ time0
 ########################################################################
 # list file names and sort them in order, so they're in the right sequence
 files.floor <- list.files(pattern = "Arena-Subject") #testNoldus_Excel #Arena-Subject #adjusted
-#iButton Hobo logger data file 
-ibutton <- list.files(pattern = "nest") #plate or #hobo #top or #nest
+
 #body temp 
 therm <- list.files(pattern = c("DAT")) #thermo loggers, if relevant
 
@@ -122,27 +96,6 @@ therm_content <-
          na.strings = c("-"))
 head(therm_content)
 
-#read ibutton hobo logger
-hobo <-
-  ibutton %>%
-  lapply(read.table,
-         sep=',',       #warning, make sure is comma ',' sep and not tab '\t' sep
-         skip = 18,     #warning, essential that hobo is always saved in the same format (e.g. with 18 extra lines at top)
-         header = TRUE, 
-         #encoding = "UTF-16", 
-         #as.is = FALSE,
-         colClasses="character",
-         stringsAsFactors = F,
-         na.strings = c("-"))
-
-#get huddle start time (time0). 
-#this is now obsolete: we get start time from the fp data above
-# dome_time <- files.floor %>%
-#   lapply(read.table, sep = ',',skip = 12,header = F,nrows = 1,as.is = TRUE, col.names = c("a", "time", "c"))
-# time0 <- dome_time[[1]]$time
-# options(digits.secs=3) 
-# time0 <- strptime(time0, "%m/%d/%Y %H:%M:%OS", tz = "America/Denver")
-
 # get rid of first line in each element of the list (which is just units)
 floor_content <- lapply(floor_content, function(x) x[-1,])
 
@@ -157,7 +110,6 @@ all_therm <- mapply(c, therm_content, therm_filenames, SIMPLIFY = FALSE)
 # unlist all lists and change column name
 all_floor <- rbindlist(all_floor, fill = T)
 all_therm <- rbindlist(all_therm, fill = T)
-hobo <- rbindlist(hobo, fill = T)
 
 # update thermo colnames  
 names(all_therm) <- c("number","Time.stamp","Temp","mouseID")
@@ -165,7 +117,6 @@ names(all_therm) <- c("number","Time.stamp","Temp","mouseID")
 # convert to tibble 
 all_floor <- as_tibble(all_floor)
 all_therm <- as_tibble(all_therm)
-hobo <- as_tibble(hobo)
 
 # change column name (of the last column)
 #names(all_floor)[length(names(all_floor))]<-"File.Path" 
@@ -188,7 +139,7 @@ all_floor <- all_floor %>% dplyr::mutate(ArbTime = row_number())
 frameLength = as.numeric(nth(all_floor$Trial.time, 2))
 all_floor$frameTime <- seq(from = 0,  by = frameLength, length.out = nrow(all_floor))
 
-#convert multiple columns to numberic 
+#convert multiple columns to numeric 
 str(all_floor)
 cols.num = c("Trial.time","Recording.time","X.center","Y.center","Area","Areachange","Elongation", "Activity")
 #make sure 5C pedestal exps are numeric
@@ -201,8 +152,6 @@ ggplot(data = all_floor, aes(x=Activity)) +
   theme_classic() +
   scale_x_log10()
 ggsave(filename = paste(plotdir,"activity", ".tiff", sep=""),width = 10, height = 7, units = 'cm')
-# for log transformed, back-calculate inflection point in graph. For example if inflection at 1.1. 10^x = 1.1. log10(1.1)/log10(10) = 0.04139269
-# For example peak is at 10.1, then 10^x = 10.1.  log10(1.1)/log10(10) = 1.004321
 
 ########################################
 ########################################
@@ -214,8 +163,7 @@ ggsave(filename = paste(plotdir,"activity", ".tiff", sep=""),width = 10, height 
 # 2. add an hour column
 # 3. add light dark (LD) 
 all_floor = all_floor %>%
-  #(ideally we'd add time0 to all_floor$Trial.time, but since some videos are in clips, safer to add to all_floor$frameTime)
-  mutate(Time.stamp = all_floor$frameTime + time0) %>% #(ideally we'd add all_floor$Trial.time, but since some videos are in clips)
+  mutate(Time.stamp = all_floor$frameTime + time0) %>% 
   mutate(date = date(Time.stamp),
          hour = hour(Time.stamp),
          LD = case_when(hour >= 6 & hour <18 ~ "light", 
@@ -232,18 +180,9 @@ all_floor = all_floor %>% mutate(Time.stamp.round = lubridate::round_date(Time.s
 ########################################
 ########################################
 
-# # TEMPERATURE DATA: (1) hobo loggers and (2) Tb body temp loggers. (3) merge with all data 
-# (1) hobo logger iButton time stamp
-hobo2 = hobo %>%
-  dplyr::mutate(Date.Time = strptime(Date.Time, "%m/%d/%y %I:%M:%S %p")) %>% #note hour is %I (not %H) to accomodate am/pm (%p)
-  dplyr::mutate(hoboTime = as.POSIXct(Date.Time, tz = "America/Denver","%Y-%m-%d %H:%M:%S")) %>%
-  dplyr::rename(hoboC = Value) %>%
-  dplyr::select(-c(Unit,Date.Time)) %>%
-  dplyr::mutate(hoboC = as.numeric(hoboC))
-hobo2$hoboC #note how the temp value has not lost digits
-hobo2
-# 
-# # (2) Tb body temp thermo logger 
+# # TEMPERATURE DATA: Tb body temp loggers. Merge with all data 
+
+# Tb body temp thermo logger 
 # convert thermo time to POSIXct
 #warning, timestamps exported variously as "%d-%m-%Y %H:%M:%S", "%d.%m.%y %H:%M:%S", "%Y.%m.%d %H:%M:%S", "%Y.%d.%m %H:%M:%S"
 all_therm$Time.stamp = as.POSIXct(all_therm$Time.stamp, tz = "America/Denver","%d.%m.%Y %H:%M:%S")
@@ -257,12 +196,6 @@ all_therm <- all_therm %>%
 names(all_therm)[2:ncol(all_therm)] <- sub("\\_.*", "", names(all_therm)[2:ncol(all_therm)])
 #rename fpmouse to Temp so it has the same col name in the output file 
 all_therm = rename(all_therm, Temp = fpmouse)
-
-###########
-# TO DO: remove hobo and all_therm if they are empty 
-###########
-# https://stackoverflow.com/questions/40156259/r-remove-all-data-frames-from-work-space-that-have-0-rows-i-e-are-empty
- #rm(list=alldfnames[i])
 
 ###########
 # create the all_floor2 df, depending on what elements you already have
@@ -279,48 +212,6 @@ if (!exists('all_floor2') & exists('hobo2') & exists('all_therm')) {
 } else if (!exists('all_floor2') & !exists('hobo2') & !exists('all_therm')) {
   all_floor2 = all_floor
 } 
-
-########################################
-########################################
-# !*!*!*!*!*!*!*!*!*!*!*!*!*!* For when there is no Noldus data, but you do have temperature data !*!*!*!*!*!*!*!*!*!*!*!*!*!*
-########################################
-########################################
-#make a time series if you have Tb data every 5 seconds (instead of 1 second)
-# ts <- seq.POSIXt(as.POSIXct(min(fp2$dateTime)),
-#                  as.POSIXct(max(fp2$dateTime)),
-#                  by="sec")
-# df <- data.frame(Time.stamp=ts)
-# # "pad" missing values for each second
-# all_therm_ts <- full_join(df,all_therm)
-# #round to nearest second
-# roundRate = "1s"
-# all_therm = all_therm_ts %>%
-#   #WARNING! round_date doesn't round *exactly* right.
-#   mutate(Time.stamp = lubridate::round_date(Time.stamp,roundRate))
-# attr(all_therm$Time.stamp, "tzone")<- "America/Denver"
-# 
-# #join all_therm and hobo2 to fp2 
-# str(fp2)
-# roundRate = "1s"
-# fp2 = fp2 %>%
-#   #WARNING! round_date doesn't round *exactly* right.
-#   mutate(Time.stamp.round = lubridate::round_date(dateTime,roundRate))
-# attr(fp2$Time.stamp.round, "tzone") <- "America/Denver"
-# 
-# #join
-# fp2 = fp2 %>% left_join(all_therm, by = c("Time.stamp.round" = "Time.stamp"))
-# #fp2 = fp2 %>% left_join(hobo2, by = c("Time.stamp.round" = "hoboTime"))
-# 
-# #fill in missing data and prep for downstream steps. 
-# fp2 = fp2 %>%
-#   fill(cagemate, .direction = "up") %>%
-#   fill(Temp, .direction = "up")
-# #Call it FP.noldus
-# FP.noldus = fp2
-# #get rid of duplicate lines 
-# FP.noldus = FP.noldus %>% distinct(.)
-# #NOW SKIP AHEAD TO WHERE FP.Noldus is first defined, and run the following line
-# #> FP.noldus2 = FP.noldus
 
 ########################################
 ########################################
@@ -370,16 +261,6 @@ all_floor2 = all_floor2 %>%
                   ifelse(rowSums(all_floor2[, filter_existing_cols(all_floor2, "Stationary.Social.states.")] == 1, na.rm = TRUE) > 0, "Sta",
                   NA_character_)))))))))))))
 unique(all_floor2$huddleState)
-########################################
-# for manually scored hot/cold plate data                            #WARNING, NEED TO GO THROUGH AND CHANGE huddlestate TO behaviorstate
-########################################
-#make a column for the ethogram 
-# all_floor2 = all_floor2 %>%
-#   mutate(huddleState = case_when(
-#     On.pedestal.Social.states..manual.scoring.. == 1 ~ "pedestal", 
-#     In.arena.Social.states..manual.scoring.. == 1 ~ "floor", 
-#     ))
-# str(all_floor2)
 
 ########################################
 ########################################
@@ -465,15 +346,10 @@ FP.noldus2 = FP.noldus2 %>%
                 "FrameCounter.y", ".resid",
                 "idkTime", "robustfit")))
 
-#remove first two minutes: fps * 60seconds *2min: FP.noldus2[-c(1:(fps*60*2)), ]
-#or get rid of first n rows
-#FP.noldus2 = FP.noldus2[-c(1:1000), ]
-#FP.noldus2 = FP.noldus2[-c(77666:78619), ]
-
+#histograms
 hist(FP.noldus2$normalizedF)
 hist(FP.noldus2$lmQuotient)
 hist(FP.noldus2$Temp)
-hist(FP.noldus2$hoboC)
 
 ########################
 #order levels from least active to most active
@@ -488,14 +364,6 @@ FP.noldus2 = FP.noldus2 %>%
                                     "sleeSol", "Nest","groomSel", "groomSoc",
                                     "contactI","contactR", "EatDri", "LMA")))
 
-# SOLO EXPERIMENTS
-FP.noldus2 = FP.noldus2 %>%
-  dplyr::mutate(huddleState=
-                  factor(huddleState,
-                         levels = c("sleeSol", "Nest",
-                                    "groomSel",
-                                    "EatDri","LMA","Sta")))
-unique(FP.noldus2$huddleState)
 
 ##########
 # Z score lmQ.bc
@@ -513,10 +381,6 @@ str(FP.noldus2)
 ########################################
 ########################################
 #since temp is only recorded every second, need to have one sample per second 
-# roundRate = "1s"
-# fp2 = fp2 %>%
-#   #WARNING! round_date doesn't round *exactly* right.
-#   mutate(Time.round1sec = lubridate::round_date(dateTime,roundRate))
 
 FP.noldus2.1 = FP.noldus2 %>%
   group_by(Time.stamp.round) %>%
@@ -537,21 +401,12 @@ p.Tb.cm.DeltaF = ggplot(FP.noldus2.1, aes(x=cagemate, y=lmQ.bc )) +
 p.Tb.cm.DeltaF
 ggsave(filename = paste(plotdir,"bodyTempCageMate by lmQ.bc", ".pdf", sep=""),p.Tb.cm.DeltaF, width = 12, height = 10, units = 'cm')
 
-p.Tb.hoboC = ggplot(FP.noldus2.1, aes(x=hoboC, y=lmQ.bc )) +
-  geom_point(color="grey80") + 
-  geom_smooth(method = "gam", formula = y ~ s(x, bs = "cs", fx = TRUE, k = 5))+
-  theme_classic()
-p.Tb.hoboC
-ggsave(filename = paste(plotdir,"hoboC by lmQ.bc", ".pdf", sep=""),p.Tb.hoboC, width = 12, height = 10, units = 'cm')
 
 ########################################
 ########################################
 # make plots of behavior and temperature data                             #WARNING, NEED TO GO THROUGH AND CHANGE huddlestate TO behaviorstate
 ########################################
 ########################################
-#get rid of NAs in the huddleState col 
-#all_floor2.1 = all_floor2[!is.na(all_floor2$huddleState),]
-
 #PLOT BEHAVIOR
 p.ethog = ggplot(FP.noldus2, aes(x = Time.round.1Sec, y = huddleState, fill = huddleState, color = huddleState), ) + 
   #geom_bar(position="stack", stat="identity")
@@ -625,11 +480,9 @@ SDs = 6
 
 #Find peaks in one column on a subset of data (aka head)
 #TESTING: FOR LMQUOTIENT, DEFINE PEAKS ON THE BASELINECORRECTED DATA, THEN REVERT. THIS GETS AROUND SHIFTING BASELINE
-peaks <- findpeaks(head$lmQ.bc.Z,                                #head[[dataType]],
+peaks <- findpeaks(head$lmQ.bc.Z,                       
                    minpeakdistance = peakdistance,
-                   #minpeakheight = quantile(head$lmQ.bc, na.rm=TRUE)[[4]]*1.50,
-                   minpeakheight = sd(head$lmQ.bc.Z)*SDs              #sd(head[[dataType]])*SDs
-                   #threshold = 2,   #quantile(head$lmQuotient)[[2]]
+                   minpeakheight = sd(head$lmQ.bc.Z)*SDs 
                    ) 
 head$new_col <- rep(0, nrow(head))
 head$new_col <- replace(head$new_col, peaks[,2], values=1) #the second the position/index is the maximum is reached
@@ -639,13 +492,11 @@ ggplot(head, aes_string(x="Time.stamp", y = dataType)) +
   geom_line() + 
   geom_point(data= head[head$new_col ==1, ], color = "red")
 
-hist(FP.noldus2$lmQ.bc.Z)
 #full dataset for one column (lmQuotient)
 peaks <- findpeaks(FP.noldus2$lmQ.bc.Z, 
                    minpeakdistance = peakdistance,
-                   #minpeakheight =  quantile(FP.noldus2$lmQ.bc)[[4]]*3,
                    minpeakheight = sd(FP.noldus2$lmQ.bc.Z)*SDs
-                   ) #mad(FP.noldus2$lmQuotient)*3
+                   ) 
 FP.noldus2$peak <- rep(0, nrow(FP.noldus2))
 FP.noldus2$peak <- replace(FP.noldus2$peak, peaks[,2], values=1)
 
@@ -655,9 +506,8 @@ p.peaks = ggplot(FP.noldus2, aes_string(x="timeS", y = dataType)) +
   geom_point(data= FP.noldus2[FP.noldus2$peak ==1, ], color = "red",size = 0.6) + 
   theme_classic()
 p.peaks
-#ggplotly(p.peaks)
 ggsave(filename = paste(
-  plotdir,"peaks",peakdistance,"_trimlength",trimLength,"_",SDs,"SDs_", dataType, ".pdf", sep=""), p.peaks, width = 12, height = 9, units = 'cm')
+  plotdir,"peaks",peakdistance,"_trimlength",trimLength,"_",SDs,"SDs_", dataType, ".png", sep=""), p.peaks, width = 12, height = 9, units = 'cm')
 
 #summarize and plot peak values
 hsem <- summarySE(FP.noldus2[FP.noldus2$peak ==1, ], 
@@ -674,16 +524,6 @@ ggsave(filename = paste(
   plotdir,"peak_values_by_state_",dataType,"_peakDistance",peakdistance,"_trimlength",trimLength,"_",SDs,"SDs_",
   ".pdf", sep=""), width = 9, height = 9, units = 'cm')
 
-#full dataset
-# hsem <- summarySE(FP.noldus2, 
-#                   measurevar="lmQ.bc", groupvars=c("huddleState"), na.rm=TRUE) 
-# ggplot(FP.noldus2, aes(x=huddleState, y=lmQ.bc)) + 
-#   geom_jitter(color = "grey90") + 
-#   geom_errorbar(data = hsem, aes(ymin=lmQ.bc-ci, ymax=lmQ.bc+ci), colour="black", width=.5, position=pd) +
-#   theme_classic()
-# ggsave(filename = paste(
-#   plotdir,"peak_values_by_state_","_peakDistance",peakdistance,"_trimlength",trimLength,"fullData", ".pdf", sep=""), width = 9, height = 9, units = 'cm')
-
 #plot Tb x DeltaF for specific states
 unique(FP.noldus2$huddleState)
 str(FP.noldus2)
@@ -692,18 +532,18 @@ subset = FP.noldus2[which (FP.noldus2$huddleState == "sleeHud"), ]
 #subset = FP.noldus2[which (FP.noldus2$huddleState == "actiHud" & FP.noldus2$peak ==1), ]
 
 p.Tb.DeltaF.state = ggplot(data = subset, aes(x=Temp, y=lmQ.bc )) +
-  geom_point() + 
-  geom_smooth()+
+  geom_point(size = 0.5) + 
+  #geom_smooth()+
   theme_classic()
 p.Tb.DeltaF.state
-ggsave(filename = paste(plotdir,"bodyTemp_lmQ_state","_sleeHud", ".pdf", sep=""),p.Tb.DeltaF.state, width = 8, height = 8, units = 'cm')
+ggsave(filename = paste(plotdir,"bodyTemp_lmQ_state","_sleeHud", ".png", sep=""),p.Tb.DeltaF.state, width = 8, height = 8, units = 'cm')
 
 p.Tb.cm.DeltaF.state = ggplot(data = subset, aes(x=cagemate, y=lmQ.bc )) +
-  geom_point() + 
-  geom_smooth()+
+  geom_point(size = 0.5) + 
+  #geom_smooth()+
   theme_classic()
 p.Tb.cm.DeltaF.state
-ggsave(filename = paste(plotdir,"bodyTemp_lmQ_state","_sleeHud_cagemate", ".pdf", sep=""),p.Tb.cm.DeltaF.state, width = 8, height = 8, units = 'cm')
+ggsave(filename = paste(plotdir,"bodyTemp_lmQ_state","_sleeHud_cagemate", ".png", sep=""),p.Tb.cm.DeltaF.state, width = 8, height = 8, units = 'cm')
 
 p.Tb.DeltaF = ggplot(FP.noldus2[FP.noldus2$peak ==1, ],
                      aes(x=Temp, y=lmQ.bc )) +
@@ -719,14 +559,12 @@ ggsave(filename = paste(plotdir,"bodyTemp by lmQ.bc peaks", ".pdf", sep=""),p.Tb
 # for (a) manual score HC exps, or for (b) pedestal exps
 ########################################
 ########################################
-# here's one way: https://stackoverflow.com/questions/44100258/extract-n-rows-before-and-after-a-value-in-a-data-frame 
-#here's a better way https://stackoverflow.com/questions/13155609/returning-above-and-below-rows-of-specific-rows-in-r-dataframe/13155669#13155669
 
 #define after & before. 
 # 10 fps
 # For before and after the start/end of a quiescence bout: 30 and 180s or 240s
 before <- fps*30
-after <- fps*240
+after <- fps*60
 
 # fp$huddleState cannot have NA for the lines that follow 
 #FP.noldus2.trim = FP.noldus2.trim %>% dplyr::mutate(huddleState = replace_na(as.character(huddleState), "null"))
@@ -744,13 +582,6 @@ rows <- "sleeHud_start"
 #select behavior: GROUPED: "sleeHud", "actiHud", "groom", "soloAct", "LMA". SOLO: "sleep"
 #behavior <- "sleeSol"
 
-# # (2) hot/cold start
-# #     pedestal/floor: "floor_start", "floor_stop","pedestal_start", "pedestal_stop" 
-#colname = "bStartStop"
-#rows <- "pedestal_start"
-#select behvaior: "floor","pedestal"
-#behavior <- "pedestal"
-
 extract.with.context <- function(x, colname, rows, after = 0, before = 0) {
   match.idx  <- which(x[[colname]] %in% rows)
   span       <- seq(from = -before, to = after)
@@ -762,48 +593,50 @@ extract.with.context <- function(x, colname, rows, after = 0, before = 0) {
 extracted = extract.with.context(x=FP.noldus2, colname=colname, rows=rows, after = after, before = before)
 extracted = extracted %>% dplyr::mutate(huddleState = replace_na(as.character(huddleState), "null"))
 
-# #OPTIONAL: subset on a single plotGroup
-#extracted = extracted[extracted$plotGroup == 4,]
-
 #################
 # 1) avoid collisions by creating an independent result for each run of e.g. actiHud_start, and then bind all the results together
 # 2) Put plotGroup inside the result as well. 
 #################
 # plotGroup counter 
 start_idx <- which(extracted$bStartStop == rows)
-dataList = list()
+#dataList = list()
 span <- seq(from = -before, to = after) # this is the same through the loop, can be outside it
 
-#create a list of vectors for each plotgroup. This should avoid collisions due to unique plotGroups being too close to eachother. 
-for (j in 1:length(start_idx)) { # shouldn't be necessary to wrap in unique(), because you're extracting unique rows that are starts - if this isn't unique, you have an upstream problem, I think
-  df <- extracted
-  match.idx  <- start_idx[j]
-  extend.idx <- c(outer(match.idx, span, `+`))
-  # When j is 1, there is no start_idx "j - 1" - handle this specially and ensure greater than zero in that case
-  if(j==1){
-    extend.idx_2 <- extend.idx[extend.idx >0 & extend.idx < start_idx[j + 1]] # bound the index at 0 and the next start
-    span_2 <- span[which(extend.idx %in% extend.idx_2)]  # clip span to remove events that have been removed
-    ## Or, if it's the final start, make sure that we don't index past the end of the dataframe
-  }else if (j==length(start_idx)){
-    extend.idx_2 <- extend.idx[extend.idx > start_idx[j - 1] & extend.idx <= nrow(df)] # bound the index at the previous start and at equal or less than the number of rows
-    span_2 <- span[which(extend.idx %in% extend.idx_2)]  # clip span to remove events that have been removed
-  }else{
-    extend.idx_2 <- extend.idx[extend.idx > start_idx[j - 1] & extend.idx < start_idx[j + 1]]  # bound the index at the previous start and the next start
-    span_2 <- span[which(extend.idx %in% extend.idx_2)]  # clip span to remove events that have been removed
-  }
-  df2 <- df[extend.idx_2, , drop = FALSE]
-  df2$plotGroup = j
+#create data list 
+create_data_list <- function(extracted, rows, start_idx, span) {
+  dataList <- list()
   
-  dataList[[j]] <- cbind(df2, span_2)
+  #create a list of vectors for each plotgroup. This should avoid collisions due to unique plotGroups being too close to eachother. 
+  for (j in 1:length(start_idx)) {
+    df <- extracted
+    match.idx <- start_idx[j]
+    extend.idx <- c(outer(match.idx, span, `+`))
+    
+    # Handle special cases for the first and last start index
+    if (j == 1) {
+      extend.idx_2 <- extend.idx[extend.idx > 0 & extend.idx < start_idx[j + 1]]
+      span_2 <- span[which(extend.idx %in% extend.idx_2)]
+    } else if (j == length(start_idx)) {
+      extend.idx_2 <- extend.idx[extend.idx > start_idx[j - 1] & extend.idx <= nrow(df)]
+      span_2 <- span[which(extend.idx %in% extend.idx_2)]
+    } else {
+      extend.idx_2 <- extend.idx[extend.idx > start_idx[j - 1] & extend.idx < start_idx[j + 1]]
+      span_2 <- span[which(extend.idx %in% extend.idx_2)]
+    }
+    
+    df2 <- df[extend.idx_2, , drop = FALSE]
+    df2$plotGroup <- j
+    
+    dataList[[j]] <- cbind(df2, span_2)
+  }
+  
+  return(dataList)
 }
-every_data = do.call(rbind, dataList)
-every_data
 
-#OPTIONAL
-#remove bouts that do not have a peak. Start by naming each sequential bout of behavior. 
-#every_data = every_data %>% mutate(rleid = data.table::rleid(plotGroup))
-#next, remove bouts that dont have a peak
-#every_data = every_data %>% group_by(rleid) %>% filter(any(peak == 1))
+#create dataList and every_data using functions defined above 
+dataList <- create_data_list(extracted=extracted, rows=rows, span=span, start_idx)
+every_data = do.call(rbind, dataList)
+str(every_data)
 
 #Plot all the data columns at once
 colNames = c("lmQ.bc","nF.bc","lmQuotient","normalizedF")
@@ -813,9 +646,10 @@ for(i in colNames){
     geom_line(data=every_data, aes_string(x="span_2", y = i, group = "plotGroup"), color = "gray90") +
     geom_vline(xintercept = 0, linetype="dotted", color = "gray80", linewidth=1) + 
     geom_smooth(data=every_data, aes_string(x="span_2", y = i), span = 0.1) +
-    theme_classic()
+    theme_classic() +
+    labs(x = "time since event (deciseconds)", y = "dF/F")
   print(plt)
-  ggsave(filename = paste(plotdir,rows,"_value_",i, "_before",before,"_after",after,"_", "trimLength_", trimLength, ".pdf", sep=""), plt, width = 15, height = 7, units = 'cm')
+  ggsave(filename = paste(plotdir,rows,"_value_",i, "_before",before,"_after",after,"_", "trimLength_", trimLength, ".png", sep=""), plt, width = 9, height = 7, units = 'cm')
   Sys.sleep(2)
 }
 
@@ -880,11 +714,10 @@ ggsave(filename = paste(plotdir,"p.deltaFslide", ".pdf", sep=""),p.deltaFslide, 
 
 p.lmQ.bc.Temp = ggplot(FP.noldus2, aes(Temp, lmQ.bc)) +
   geom_jitter(size = 0.4) +
-  #labs(x = 'Time', y = '', title = '') + 
   geom_smooth() +
   theme_classic() 
 p.lmQ.bc.Temp
-ggsave(filename = paste(plotdir,"p.lmQ.bc.Temp", ".pdf", sep=""),p.lmQ.bc.Temp, width = 15, height = 7, units = 'cm')
+ggsave(filename = paste(plotdir,"p.lmQ.bc.Temp", ".png", sep=""),p.lmQ.bc.Temp, width = 15, height = 7, units = 'cm')
 
 p.lmQ.bc.Temp.cm = ggplot(FP.noldus2, aes(cagemate, lmQ.bc)) +
   geom_jitter(size = 0.4) +
@@ -909,30 +742,6 @@ p.delta = ggplot(FP.noldus2, aes(Time.round.1Sec, deltaFq)) +
 #p.delta
 #ggsave(filename = paste(plotdir,"p.deltaF", ".pdf", sep=""),p.delta, width = 15, height = 7, units = 'cm')
 
-# p.hobo = ggplot(FP.noldus2, aes(Time.round.1Sec, hoboC)) +
-#   geom_line(size = 0.9) +
-#   #geom_point(size = 0.2) +
-#   #labs(x = '', y = 'hoboC', title = '') +  
-#   theme_classic()
-# #p.hobo
-# ggsave(filename = paste(plotdir,"p.hoboC", ".pdf", sep=""),p.hobo, width = 15, height = 7, units = 'cm')
-# 
-# p.hobo.lmQ.bc = ggplot(FP.noldus2, aes(hoboC, lmQ.bc)) +
-#   geom_jitter(size = 0.4) +
-#   #labs(x = 'Time', y = '', title = '') + 
-#   geom_smooth() +
-#   theme_classic()
-# #p.hobo.lmQ.bc
-# ggsave(filename = paste(plotdir,"p.hobo.lmQ.bc", ".pdf", sep=""),p.hobo.lmQ.bc, width = 10, height = 10, units = 'cm')
-# 
-# p.hobo.normalizedF = ggplot(FP.noldus2, aes(hoboC, normalizedF)) +
-#   geom_jitter(size = 0.4) +
-#   #labs(x = 'Time', y = '', title = '') + 
-#   geom_smooth() +
-#   scale_x_continuous(expand = c(0, 0)) +
-#   theme_classic()
-# #p.hobo.normalizedF
-# #ggsave(filename = paste(plotdir,"p.hobo.normalizedF", ".pdf", sep=""),p.hobo.normalizedF, width = 10, height = 10, units = 'cm')
 
 #Activity: get rid of artifacts (i.e. above 7)
 #FP.noldus2 = mutate(FP.noldus2, ActivityTrim = case_when(Activity > 9 ~ NA_real_, TRUE ~ Activity))
@@ -945,7 +754,6 @@ ggsave(filename = paste(plotdir,"p.activ", ".pdf", sep=""),p.activ, width = 15, 
 
 p.activ.lmQ.bc = ggplot(FP.noldus2, aes((Activity), lmQ.bc)) +
   geom_jitter(size = 0.4) +
-  #labs(x = 'Time', y = '', title = '') + 
   geom_smooth() +
   theme_classic()
 p.activ.lmQ.bc
@@ -1021,15 +829,18 @@ x4 = egg::ggarrange(p.ethog+
                       theme(axis.title.y = element_blank()),
                     ggplot() + theme_void(),
                     p.Tb.sampled + 
-                      theme(axis.title.y = element_blank()) +
-                      theme(axis.text.x=element_blank()),
+                      #theme(axis.title.y = element_blank()) +
+                      theme(axis.text.x=element_blank()) +
+                    labs(y = "Tb(C)"),
                     ggplot() + theme_void(),
                     p.activ.sampled +
-                      theme(axis.title.y = element_blank()) + 
-                      theme(axis.text.x=element_blank()), 
+                      #theme(axis.title.y = element_blank()) + 
+                      theme(axis.text.x=element_blank()) +
+                      labs(y = "Locomotion"),
                     ggplot() + theme_void(),
                     p.lmQ.bc.Z_sampled+
-                      theme(axis.title.y = element_blank()),
+                      #theme(axis.title.y = element_blank()) +
+                      labs(y = "dF/F"),
                     heights = c(0.4,  #multiply by *(5/8) to make solo compatible with paired
                                 -0.25, #-0.09
                                 0.4,
@@ -1098,35 +909,6 @@ x4 = egg::ggarrange(p.ethog+ theme(axis.text.x=element_blank()),
                     heights = c(0.5, -0.1, 0.5,-0.2, 0.5))
 ggsave(filename = paste(plotdir, "p.ethog,p.Tb,p.lmQ.bc", ".pdf", sep=""), x4, width = 15, height = 10, units = 'cm')
 
-#alternative approach: p.hudd, p.Tb, p.lmQ.bc,p.activ
-#cowplot::plot_grid(p.ethog, p.Tb, p.lmQ.bc, p.activ,  align = "v", ncol = 1, rel_heights = c(0.5, 0.2))
-#x4 = egg::ggarrange(p.ethog, p.Tb, p.lmQ.bc, p.activ,  heights = c(0.5, 0.5, 0.5, 0.5))
-#ggsave(filename = paste(plotdir, "p.ethog.Tb_p.lmQ.bc_p.activ", ".pdf", sep=""), x4, width = 15, height = 15, units = 'cm')
-#ggsave(filename = paste(plotdir, "p.ethog.Tb_p.lmQ.bc_p.activ", ".png", sep=""), x4, width = 15, height = 15, units = 'cm')
-
-#alternative approach: p.ethog, p.hobo, p.lmQ.bc, p.activ,
-#cowplot::plot_grid(p.ethog, p.hobo, p.lmQ.bc, p.activ,  align = "v", ncol = 1, rel_heights = c(0.5, 0.2))
-#x4 = egg::ggarrange(p.ethog, p.hobo, p.lmQ.bc, p.activ,  heights = c(0.5, 0.5, 0.5, 0.5))
-#ggsave(filename = paste(plotdir, "p.ethog_p.hobo_p.lmQ.bc_p.activ", ".pdf", sep=""), x4, width = 15, height = 15, units = 'cm')
-
-####################
-# Solo DeltaF and activity
-####################
-#p.lmQ, Activity
-# cowplot::plot_grid(p.lmQ,  p.activ, align = "v", ncol = 1, rel_heights = c(0.5, 0.2))
-# x4 = egg::ggarrange(p.lmQ, p.activ,  heights = c(0.5, 0.5))
-# ggsave(filename = paste(plotdir, "p.ethog,p.lmQ,p.activ", ".pdf", sep=""), x4, width = 15, height = 10, units = 'cm')
-
-#p.lmQ.bc, Activity
-#cowplot::plot_grid(p.ethog, p.lmQ.bc,  p.activ, align = "v", ncol = 1, rel_heights = c(0.5, 0.2))
-x4 = egg::ggarrange(p.ethog, p.lmQ.bc, p.activ,  heights = c(0.5, 0.5, 0.5))
-ggsave(filename = paste(plotdir, "p.ethog,p.lmQ.bc,p.activ", ".pdf", sep=""), x4, width = 15, height = 10, units = 'cm')
-
-# #p.norm, Activity
-# cowplot::plot_grid(p.norm,  p.activ, align = "v", ncol = 1, rel_heights = c(0.5, 0.2))
-# x4 = egg::ggarrange(p.norm, p.activ,  heights = c(0.5, 0.5))
-# ggsave(filename = paste(plotdir, "p.ethog,p.norm,p.activ", ".pdf", sep=""), x4, width = 15, height = 10, units = 'cm')
-
 ########################################
 # save FP.noldus2 as a csv
 ########################################
@@ -1138,15 +920,6 @@ export = FP.noldus
 
 #extract a unique identifier from File.Path [note there may/maynot be a .y added to col ]
 identifier = str_extract(export$File.Path[1], "(?<=alldata)(.+)(?=\\.)")
-
-#!!!!!!!!!!!!!!!!
-#note to self: you can probably get rid of the ~File.name col,
-#because in next script when you aggregate these dfs, new filename col will be made
-#also to add: 
-# -contains("Result")
-# -contains("File.Path")
-# should leave 'index' in! 
-#!!!!!!!!!!!!!!!!
 
 export = FP.noldus2 %>%
   dplyr::select(-any_of(c(contains("states"), 
