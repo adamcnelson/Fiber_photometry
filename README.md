@@ -37,8 +37,8 @@ This README illustrates some of the key steps.
 ### Example dataset
 The following data was read in from the [Neurophotometrics system using a Bonsai workflow](https://neurophotometrics.com/bonsai-manual). Note that in this workflow the fluorescence data and associated timestamp values are read in as separate files. Isosbestic channel: LedState == 1. GCaMP channel:  LedState == 2.
 
-For reference, here is a tyical Bonsai workflow. 
-<img src="README_images/script1/Screenshot 2024-12-03_Bonsai_workflow.png" width="550" />
+For reference, here is a typical Bonsai workflow. 
+<img src="README_images/script1/Screenshot 2024-12-03_Bonsai_workflow.png" width="350" />
 
 Read in the data using `lapply` and `read.table`.
 ``` r
@@ -165,8 +165,8 @@ write.table(gcamp.fitted3, file=paste(plotdir, "NP_processed_",identifier, "_tri
 
 -   Use date-time timestamps to monitor effects of the light/dark cycle 
 -   Find peaks algorithmically
--   Align photometry fluoresence data with behavioral states and body temperature (Tb). 
--   Center fluoresence data with the onset or offset of a particular behavior. 
+-   Align photometry fluorescence data with behavioral states and body temperature (Tb). 
+-   Center fluorescence data with the onset or offset of a particular behavior. 
 
 The following behavior-state data data were read in from a [Noldus Ethovision XT workflow](https://www.noldus.com/ethovision-xt?utm_term=&utm_campaign=PM+-+A%7CEV%7CBranded(E%7CP)+-+CA%2BUSA&utm_source=adwords&utm_medium=ppc&hsa_acc=5401040478&hsa_cam=20431558064&hsa_grp=&hsa_ad=&hsa_src=x&hsa_tgt=&hsa_kw=&hsa_mt=&hsa_net=adwords&hsa_ver=3&gad_source=1&gbraid=0AAAAAD_LcAfmYuZlzClWokbPynoynQE6S&gclid=CjwKCAiA9bq6BhAKEiwAH6bqoBSEvou-l48CiTfdlWPWijD_tPLWehXjGLBnQq64BueULimNC0dghxoCHWMQAvD_BwE).
 The body temperature data were obtained from [Star-Oddi DST nano-T temperature loggers](https://www.star-oddi.com/products/temperature-pressure-data-loggers/small-thermometer).
@@ -235,7 +235,7 @@ extract.with.context <- function(x, colname, rows, after = 0, before = 0) {
 extracted = extract.with.context(x=FP.noldus2, colname=colname, rows=rows, after = after, before = before)
 ```
 
--   Create a list of vectors for each start/stop instance for plotting. 
+-   Use the `create_data_list` function to create a list of vectors for each start/stop instance for plotting. 
 
 ```r
 # plotGroup counter 
@@ -280,7 +280,7 @@ every_data = do.call(rbind, dataList)
 str(every_data)
 ```
 
-The calcim activity decreases upon the onset of a specific behavior. 
+The calcium activity decreases upon the onset of a specific behavior. 
 <img src="README_images/script2/sleeHud_start_value_lmQuotient_before300_after600_trimLength_1.png" width="400" />
 
 
