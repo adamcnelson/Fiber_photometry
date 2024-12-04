@@ -136,13 +136,13 @@ gcamp.fitted2$FP.lin_fit = gcamp.fitted2$.fitted * rr.bisquare$coefficients[[2]]
 ```
 
 - Plot the linearly scaled exponential decay fit (red line) over the GCaMP (470nm) data (black line).
-<img src="README_images/script1/linearly scaled biexponential fit over 470 data.png" width="400" />
+<img src="README_images/script1/linearly scaled biexponential fit over 470 data.png" width="500" />
 
 -   Finally, derive a normalized fluorescence value (normalizedF) by dividing the GCaMP (470nm) values by the scaled fit (FP.lit_fit). 
 ``` r
 gcamp.fitted2$normalizedF = gcamp.fitted2$Region0G/gcamp.fitted2$FP.lin_fit
 ```
-<img src="README_images/script1/normalizedF.png" width="400" />
+<img src="README_images/script1/normalizedF.png" width="500" />
 
 #### Option 2: Correct the GCaMP data with an linear model fit to GCaMP (470nm) and isosbestic (415nm) values.
 -   Extract the fitted values of this regression using `lm` and Broom's `augment` function 
@@ -155,7 +155,7 @@ lm.fitted = augment(scaled415.470, newdata=gcamp.fitted3)
 gcamp.fitted3 = gcamp.fitted3 %>% 
   dplyr::mutate(lmQuotient = Region0G/scaled415.470)
 ```
-<img src="README_images/script1/lmQuotient.png" width="400" />
+<img src="README_images/script1/lmQuotient.png" width="500" />
 
 In this example, the two different options produce very similar normalized dF/F calcium traces. However, depending on the details of a recording, they can sometimes be different. 
 
@@ -166,7 +166,7 @@ metric = gcamp.fitted3$lmQuotient
 metric[is.na(metric)]<-mean(metric[1:trim*1.01],na.rm=TRUE)
 metric.bc = baseline(matrix(metric, nrow=1), method='irls')
 ``` 
-<img src="README_images/script1/baselineCorrected_compare_lmQ.png" width="400" />
+<img src="README_images/script1/baselineCorrected_compare_lmQ.png" width="500" />
 
 ### Save dataframe as .csv. To be used as input to Script 2. Retain the current parameters in the file name. 
 ```r
@@ -251,7 +251,7 @@ extract.with.context <- function(x, colname, rows, after = 0, before = 0) {
 extracted = extract.with.context(x=FP.noldus2, colname=colname, rows=rows, after = after, before = before)
 ```
 
--   Use the `create_data_list` function to create a list of vectors for each start/stop instance for plotting. 
+-   Use the `create_data_list` function to create a list of vectors for each start/stop instance for plotting. This funciton can also be used to create a peri-stimulus time histogram. 
 
 ```r
 # plotGroup counter 
@@ -296,7 +296,7 @@ every_data = do.call(rbind, dataList)
 str(every_data)
 ```
 
-The calcium activity decreases upon the onset of a specific behavior. 
+On average, calcium activity tends to decrease upon the onset of this specific behavior. 
 <img src="README_images/script2/sleeHud_start_value_lmQuotient_before300_after600_trimLength_1.png" width="400" />
 
 -   Save the output; to be aggregated with other experiments for statistics. Add a unique identifier to each filename. 
