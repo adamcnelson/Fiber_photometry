@@ -24,20 +24,16 @@ This README illustrates some of the key steps.
 ## Example datafiles
 * Fiber photometry GCaMP fluoresence data. 
     ```
-    Fiber_photometry/datafiles
-/alldata2024-07-26T09_37_42.csv
+    Fiber_photometry/datafiles/alldata2024-07-26T09_37_42.csv
     ```
 * Behavior data
     ```
-    Fiber_photometry/datafiles
-/alldata2024-07-26T09_37_42.csv
+    Fiber_photometry/datafiles/alldata2024-07-26T09_37_42.csv
     ```
 * Body temperature data. Includes Tb for photometry animal as well as its cagemate.
     ```
-    Fiber_photometry/datafiles
-/fpmouse_3N10191DAT_3645.CSV
-Fiber_photometry/datafiles
-/cagemate_3N10190DAT.CSV
+    Fiber_photometry/datafiles/fpmouse_3N10191DAT_3645.CSV
+Fiber_photometry/datafiles/cagemate_3N10190DAT.CSV
     ```
 
 The following data was read in from the [Neurophotometrics system using a Bonsai workflow](https://neurophotometrics.com/bonsai-manual). Note that in this workflow the fluorescence data and associated timestamp values are read in as separate files. Isosbestic channel: LedState == 1. GCaMP channel:  LedState == 2.
