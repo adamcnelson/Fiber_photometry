@@ -166,6 +166,7 @@ write.table(gcamp.fitted3, file=paste(plotdir, "NP_processed_",identifier, "_tri
 -   Use date-time timestamps to monitor effects of the light/dark cycle 
 -   Find peaks algorithmically
 -   Align photometry fluoresence data with behavioral states and body temperature (Tb). 
+-   Center fluoresence data with the onset or offset of a particular behavior. 
 
 The following behavior-state data data were read in from a [Noldus Ethovision XT workflow](https://www.noldus.com/ethovision-xt?utm_term=&utm_campaign=PM+-+A%7CEV%7CBranded(E%7CP)+-+CA%2BUSA&utm_source=adwords&utm_medium=ppc&hsa_acc=5401040478&hsa_cam=20431558064&hsa_grp=&hsa_ad=&hsa_src=x&hsa_tgt=&hsa_kw=&hsa_mt=&hsa_net=adwords&hsa_ver=3&gad_source=1&gbraid=0AAAAAD_LcAfmYuZlzClWokbPynoynQE6S&gclid=CjwKCAiA9bq6BhAKEiwAH6bqoBSEvou-l48CiTfdlWPWijD_tPLWehXjGLBnQq64BueULimNC0dghxoCHWMQAvD_BwE).
 The body temperature data were obtained from [Star-Oddi DST nano-T temperature loggers](https://www.star-oddi.com/products/temperature-pressure-data-loggers/small-thermometer).
@@ -186,26 +187,101 @@ peaks <- findpeaks(FP.noldus2$lmQ.bc.Z,
 FP.noldus2$peak <- rep(0, nrow(FP.noldus2))
 FP.noldus2$peak <- replace(FP.noldus2$peak, peaks[,2], values=1)
 ```
-<img src="README_images/script2/peaks20_trimlength1_6SDs_lmQ.bc.Z.png" width="400" />
+<img src="README_images/script2/peaks20_trimlength1_6SDs_lmQ.bc.Z.png" width="300" />
 
-### Examine the relationship between calcium transients and behavior
+### Examine the relationship between calcium transients and behavior using `egg::ggarrange`
 
--   The transients appear to be selective to a particular behavioral state. 
+The transients appear to be selective to a particular behavioral state. 
 <img src="README_images/script2/p.ethog,p.lmQ.bc.Z_sampled.png" width="400" />
 
 ### Examine the relationship between calcium transients and Tb.
 
--   The calcium transients appear to occur at a lower Tb.  
+The calcium transients appear to occur at a lower Tb.  
 <img src="README_images/script2/p.lmQ.bc.Temp.png" width="400" />
 
 ### Put everything together in one aligned plot 
 
--   The transients occur during a distinct behavioral/physiological state. 
+The transients occur during a distinct behavioral/physiological state. 
 <img src="README_images/script2/p.ethog,p.lmQ.bc.Z_sampled,p.Tb, p.activ.sampled.png" width="400" />
 
-### Examine calcium events during the onset and offset of a particular behavior
+### Use run length encoding to extract calcium events during the onset and offset of a particular behavior
+-   Use run-length encoding to make a column that gives the start and stop frame for each behavioral event
+```r
+all_floor2 = all_floor2 %>% 
+  arrange(Trial.time) %>%
+  #group_by(huddleState) %>% 
+  dplyr::group_by(grp = rleid(huddleState)) %>%
+  #dplyr::mutate(Indicator = ifelse(row_number() == 1, 'start', '')) %>% 
+  dplyr::mutate(startStop = case_when(
+                row_number() == n() ~ 'stop',
+                row_number() == 1 ~ 'start')) %>%
+  as_tibble() %>%
+  tidyr::unite("bStartStop", c(huddleState,startStop), remove=FALSE)
+```
+-   Use the `extract.with.context` function to extract n rows before and after the start/stop frame of a defined behavior. 
+
+```r
+colname = "bStartStop"    
+rows <- "sleeHud_stop"
+
+extract.with.context <- function(x, colname, rows, after = 0, before = 0) {
+  match.idx  <- which(x[[colname]] %in% rows)
+  span       <- seq(from = -before, to = after)
+  extend.idx <- c(outer(match.idx, span, `+`))
+  extend.idx <- Filter(function(i) i > 0 & i <= nrow(x), extend.idx)
+  extend.idx <- sort(unique(extend.idx))
+  return(x[extend.idx, , drop = FALSE]) 
+}
+extracted = extract.with.context(x=FP.noldus2, colname=colname, rows=rows, after = after, before = before)
+```
+
+-   Create a list of vectors for each start/stop instance for plotting. 
+
+```r
+# plotGroup counter 
+start_idx <- which(extracted$bStartStop == rows)
+#dataList = list()
+span <- seq(from = -before, to = after) # this is the same through the loop, can be outside it
 
 
+create_data_list <- function(extracted, rows, start_idx, span) {
+  dataList <- list()
+  
+  #create a list of vectors for each plotgroup. This should avoid collisions due to unique plotGroups being too close to eachother. 
+  for (j in 1:length(start_idx)) {
+    df <- extracted
+    match.idx <- start_idx[j]
+    extend.idx <- c(outer(match.idx, span, `+`))
+    
+    # Handle special cases for the first and last start index
+    if (j == 1) {
+      extend.idx_2 <- extend.idx[extend.idx > 0 & extend.idx < start_idx[j + 1]]
+      span_2 <- span[which(extend.idx %in% extend.idx_2)]
+    } else if (j == length(start_idx)) {
+      extend.idx_2 <- extend.idx[extend.idx > start_idx[j - 1] & extend.idx <= nrow(df)]
+      span_2 <- span[which(extend.idx %in% extend.idx_2)]
+    } else {
+      extend.idx_2 <- extend.idx[extend.idx > start_idx[j - 1] & extend.idx < start_idx[j + 1]]
+      span_2 <- span[which(extend.idx %in% extend.idx_2)]
+    }
+    
+    df2 <- df[extend.idx_2, , drop = FALSE]
+    df2$plotGroup <- j
+    
+    dataList[[j]] <- cbind(df2, span_2)
+  }
+  
+  return(dataList)
+}
+
+#create dataList and every_data using functions defined above 
+dataList <- create_data_list(extracted=extracted, rows=rows, span=span, start_idx)
+every_data = do.call(rbind, dataList)
+str(every_data)
+```
+
+The calcim activity decreases upon the onset of a specific behavior. 
+<img src="README_images/script2/sleeHud_start_value_lmQuotient_before300_after600_trimLength_1.png" width="400" />
 
 
 
