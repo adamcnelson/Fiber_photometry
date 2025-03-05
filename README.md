@@ -21,6 +21,8 @@ This README illustrates some of the key steps.
     cd your/folder/to/clone/into
     git clone https://github.com/adamcnelson/Fiber_photometry
     ```
+* Another option is to download everything as a zip: Click "Code", then click "Download zip".
+
 ## Example datafiles
 * Fiber photometry GCaMP fluoresence data. 
     ```
@@ -28,7 +30,7 @@ This README illustrates some of the key steps.
     ```
 * Behavior data
     ```
-    Fiber_photometry/datafiles/alldata2024-07-26T09_37_42.csv
+    Fiber_photometry/datafiles/Track-07-26-24_paired_29-Trial     1-Arena-Subject 1.txt
     ```
 * Body temperature data. Includes Tb for photometry animal as well as its cagemate.
     ```
