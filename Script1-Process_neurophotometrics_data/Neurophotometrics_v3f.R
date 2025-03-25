@@ -19,7 +19,7 @@ library(signal)
 
 
 ##########
-# Automatically set the main directory to one level above the script's current location
+# Automatically set the main directory to one level above the script's current location 
 maindir <- dirname(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 # Data directory (directly inside Fiber_photometry-main)
